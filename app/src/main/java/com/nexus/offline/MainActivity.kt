@@ -43,9 +43,15 @@ class MainActivity : AppCompatActivity() {
             l += Manifest.permission.BLUETOOTH_CONNECT
             l += Manifest.permission.BLUETOOTH_SCAN
         }
+        // Request COARSE_LOCATION on every Android version: Google Nearby Connections
+        // can report MISSING_PERMISSION_ACCESS_COARSE_LOCATION during discovery even
+        // on newer Android versions / some Google Play services implementations.
+        l += Manifest.permission.ACCESS_COARSE_LOCATION
+
+        // On Android 12L and below, location-based Bluetooth scanning also needs FINE.
+        // Request COARSE first, then FINE, as required by Android's location permission flow.
         if (Build.VERSION.SDK_INT <= 32) {
             l += Manifest.permission.ACCESS_FINE_LOCATION
-            l += Manifest.permission.ACCESS_COARSE_LOCATION
         }
         if (Build.VERSION.SDK_INT >= 33) {
             l += Manifest.permission.NEARBY_WIFI_DEVICES
