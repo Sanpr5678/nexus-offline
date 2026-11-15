@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#080d16">
+<title>NEXUS Offline</title>
+<style>
+:root{--bg:#080d16;--panel:#101927;--panel2:#0c1420;--line:#1d2b3d;--text:#edf4ff;--muted:#8191a7;--blue:#66b9ff;--cyan:#6de2dc;--green:#65d6a5;--red:#ff737d}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#17304a 0%,#0a1220 42%,var(--bg) 78%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+button,input{font:inherit}
+.app{width:min(100%,520px);min-height:100vh;margin:auto;padding:22px 17px 100px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:25px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:39px;height:39px;border:1px solid #3c7898;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#18354b,#0c1b2b);box-shadow:0 0 28px #48b8ff20}
+.logo svg{width:23px;height:23px}
+.brand h1{font-size:16px;letter-spacing:2.6px;margin:0;font-weight:750}
+.brand p{margin:3px 0 0;font-size:10px;color:var(--muted);letter-spacing:1.6px}
+.status-pill{display:flex;align-items:center;gap:7px;border:1px solid #285340;background:#10251f;color:#8be2b8;border-radius:30px;padding:8px 11px;font-size:10px;letter-spacing:.7px}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 10px var(--green);animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.35;box-shadow:0 0 2px var(--green)}}
+h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
+.subtitle{font-size:12px;color:var(--muted);margin:0 0 19px}
+.network-card,.card{background:linear-gradient(155deg,#111e2d,#0d1623);border:1px solid var(--line);border-radius:20px;box-shadow:0 15px 45px #0003}
+.network-card{padding:17px 15px 14px;overflow:hidden;position:relative}
+.card-head{display:flex;justify-content:space-between;align-items:center}
+.eyebrow{font-size:10px;color:#8da2b9;letter-spacing:1.6px;text-transform:uppercase}
+.live{font-size:9px;color:var(--cyan);letter-spacing:1px}
+.network{height:190px;position:relative;margin:7px 0 0}
+.network svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.link{stroke:#2e526a;stroke-width:1.5;stroke-dasharray:5 6;fill:none}
+.flow{stroke:#70d6e7;stroke-width:2;stroke-dasharray:3 12;fill:none;animation:flow 2.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-60}}
+.node{position:absolute;width:48px;height:48px;border-radius:16px;background:linear-gradient(145deg,#1b354b,#102032);border:1px solid #47718a;display:grid;place-items:center;box-shadow:0 0 22px #4ab8e52b}
+.node svg{width:21px;height:21px;position:static}
+.node small{position:absolute;top:53px;white-space:nowrap;font-size:9px;color:#a9bbcf;letter-spacing:.3px}
+.n1{left:5%;top:67px}.n2{left:29%;top:18px}.n3{left:48%;top:111px;border-color:#66c9c7;box-shadow:0 0 25px #58d6d033}.n4{right:20%;top:18px}.n5{right:2%;top:105px}
+.node.me{background:linear-gradient(145deg,#17475a,#102638);border-color:#64c8e4}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.metric{background:#0a1420;border:1px solid #1a2b3d;border-radius:12px;padding:10px 8px}
+.metric strong{display:block;font-size:17px;font-weight:650}
+.metric span{display:block;color:var(--muted);font-size:9px;margin-top:3px;letter-spacing:.6px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:24px 2px 11px}
+.section-title h3{font-size:13px;margin:0;letter-spacing:.4px}
+.section-title span{font-size:10px;color:var(--muted)}
+.devices{display:grid;gap:9px}
+.device{display:flex;align-items:center;gap:11px;padding:12px;background:#0e1825;border:1px solid #1b2a3a;border-radius:15px}
+.device-icon{width:39px;height:39px;border-radius:12px;background:#172a3b;display:grid;place-items:center;color:#9edcff}
+.device-icon svg{width:19px;height:19px}
+.device-info{flex:1;min-width:0}
+.device-info strong{font-size:12px;font-weight:600;display:block}
+.device-info small{font-size:10px;color:var(--muted);display:block;margin-top:4px}
+.connected{font-size:9px;color:var(--green);letter-spacing:.5px}
+.action{border:1px solid #2d5874;background:#122a3b;color:#bce7ff;border-radius:10px;padding:8px 10px;font-size:10px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:17px}
+.quick button{border:1px solid var(--line);background:linear-gradient(145deg,#132235,#0d1724);color:var(--text);border-radius:14px;padding:14px 12px;text-align:left;cursor:pointer;transition:.2s}
+.quick button:active{transform:scale(.97)}
+.quick b{font-size:12px;display:block;margin-top:9px}
+.quick span{font-size:10px;color:var(--muted);display:block;margin-top:3px}
+.quick svg{width:19px;height:19px;color:var(--cyan)}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,520px);padding:10px 18px calc(10px + env(safe-area-inset-bottom));background:#09111deF;backdrop-filter:blur(18px);border-top:1px solid #1b2a3b;display:grid;grid-template-columns:repeat(4,1fr);z-index:5}
+.nav{border:0;background:none;color:#75869c;font-size:9px;padding:5px 0;display:grid;justify-items:center;gap:5px;cursor:pointer}
+.nav svg{width:19px;height:19px}
+.nav.active{color:#9cdbff}
+.toast{position:fixed;left:50%;bottom:88px;transform:translate(-50%,15px);opacity:0;pointer-events:none;background:#193044;border:1px solid #37617b;padding:11px 15px;border-radius:12px;font-size:11px;transition:.25s;white-space:nowrap;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.note{font-size:10px;color:#71839a;line-height:1.5;margin:18px 3px 0}
+@media(min-width:520px){body{padding:18px 0}.app{border:1px solid #172638;border-radius:28px;min-height:calc(100vh - 36px);padding-bottom:110px}.bottom{bottom:18px;border-radius:0 0 28px 28px}}
+
+/* ---- additions for the live app ---- */
+.app{padding-bottom:104px}
+.view{display:none;animation:fade .28s ease}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.status-pill.off{border-color:#4a3338;background:#241519;color:#ff9aa2}
+.status-pill.off .dot{background:var(--red);box-shadow:0 0 10px var(--red);animation:none}
+.banner{border:1px solid #5a4a2a;background:#241d0f;color:#f0cf8a;border-radius:14px;padding:12px 13px;font-size:11px;line-height:1.5;margin-bottom:14px;display:none}
+.banner button{margin-top:9px}
+.net-svg{width:100%;height:100%;display:block}
+.edge{stroke:#2e526a;stroke-width:1.4;stroke-dasharray:5 6;fill:none}
+.edge.direct{stroke:#4fa7c7;stroke-dasharray:none;stroke-width:1.6}
+.pulse-ring{fill:none;stroke:#66b9ff;stroke-width:1;opacity:0;animation:ring 2.6s ease-out infinite}
+@keyframes ring{0%{r:20;opacity:.5}100%{r:62;opacity:0}}
+.scan-sweep{transform-origin:210px 95px;animation:sweep 3.6s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.nodeg{animation:pop .45s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.nodeg text{font-size:9px;fill:#a9bbcf;text-anchor:middle}
+.empty{border:1px dashed #223448;border-radius:15px;padding:18px 14px;font-size:11px;color:var(--muted);line-height:1.6;text-align:center}
+.info-list{display:grid;gap:8px}
+.info-row{display:flex;justify-content:space-between;gap:12px;padding:11px 13px;background:#0e1825;border:1px solid #1b2a3a;border-radius:13px;font-size:11px}
+.info-row span{color:var(--muted)}
+.info-row b{font-weight:600;text-align:right;word-break:break-all}
+.ok{color:var(--green)}.bad{color:var(--red)}
+.btn{border:1px solid #2d5874;background:#122a3b;color:#bce7ff;border-radius:10px;padding:9px 12px;font-size:11px;cursor:pointer;transition:transform .15s,background .2s}
+.btn:active{transform:scale(.96);background:#173a52}
+.btn.danger{border-color:#5a2f37;background:#2a1519;color:#ffb3b9}
+.btn.ghost{background:transparent}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.pending{padding:13px;background:#0f1d2b;border:1px solid #2d5874;border-radius:15px;margin-bottom:9px;font-size:11px;line-height:1.5}
+.pending .code{font-size:22px;letter-spacing:5px;color:var(--blue);margin:6px 0;font-weight:650}
+.chip{font-size:9px;letter-spacing:.5px;border-radius:20px;padding:3px 7px;border:1px solid #27465c;color:#9edcff}
+.chip.good{border-color:#285340;color:var(--green)}
+.row-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.convo{display:flex;align-items:center;gap:11px;padding:12px;background:#0e1825;border:1px solid #1b2a3a;border-radius:15px;margin-bottom:9px;cursor:pointer;transition:transform .15s}
+.convo:active{transform:scale(.98)}
+.convo .last{font-size:10px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unread{min-width:18px;height:18px;border-radius:9px;background:var(--blue);color:#04121f;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 5px}
+.chat-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.chat-head h2{margin:0;font-size:17px}
+.chat-head small{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.back{border:1px solid var(--line);background:#101c2b;color:var(--text);border-radius:11px;width:36px;height:36px;cursor:pointer}
+.msgs{display:flex;flex-direction:column;gap:8px;min-height:40vh;max-height:calc(100vh - 300px);overflow-y:auto;padding:4px 2px 10px}
+.bubble{max-width:82%;padding:9px 12px;border-radius:14px;font-size:12px;line-height:1.45;word-wrap:break-word;animation:pop .25s ease both}
+.bubble.in{align-self:flex-start;background:#122234;border:1px solid #1f3449;border-bottom-left-radius:4px}
+.bubble.out{align-self:flex-end;background:#15405a;border:1px solid #2b6385;border-bottom-right-radius:4px}
+.bubble .meta{font-size:9px;color:#8ea4ba;margin-top:5px;display:flex;gap:8px;justify-content:flex-end}
+.bubble .who{font-size:9px;color:var(--cyan);margin-bottom:4px;letter-spacing:.4px}
+.bubble img{max-width:100%;border-radius:10px;display:block;margin-top:4px}
+.composer{display:flex;gap:8px;align-items:center;margin-top:8px}
+.composer input[type=text]{flex:1;background:#0c1623;border:1px solid var(--line);color:var(--text);border-radius:13px;padding:12px;font-size:12px;outline:none}
+.composer input[type=text]:focus{border-color:#3c7898}
+.icon-btn{width:42px;height:42px;border-radius:13px;border:1px solid #2d5874;background:#122a3b;color:#bce7ff;cursor:pointer;display:grid;place-items:center;transition:transform .15s}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn svg{width:18px;height:18px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:10px;color:var(--muted);letter-spacing:.8px;margin-bottom:6px;text-transform:uppercase}
+.field input{width:100%;background:#0c1623;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px;font-size:12px;outline:none}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;background:#0e1825;border:1px solid #1b2a3a;border-radius:13px;margin-bottom:9px}
+.toggle strong{font-size:12px;font-weight:600;display:block}
+.toggle small{font-size:10px;color:var(--muted);display:block;margin-top:4px;line-height:1.4}
+.sw{position:relative;width:44px;height:26px;flex:none;border-radius:13px;background:#1c2b3c;border:1px solid #2a4157;cursor:pointer;transition:background .25s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#8ea4ba;transition:transform .25s,background .25s}
+.sw.on{background:#164a63;border-color:#3c88ad}
+.sw.on::after{transform:translateX(18px);background:#9be8e3}
+.panel{padding:15px;background:#0e1825;border:1px solid #1b2a3a;border-radius:15px;font-size:11px;line-height:1.65;color:#a7b8cc}
+.panel h4{margin:0 0 8px;color:var(--text);font-size:13px}
+.nav .badge{position:absolute;top:2px;right:28%;min-width:14px;height:14px;border-radius:7px;background:var(--blue);color:#04121f;font-size:9px;font-weight:700;display:none;place-items:center;padding:0 4px}
+.nav{position:relative}
+.toast{white-space:normal;max-width:min(92vw,420px);text-align:center}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 5.5 19 18.5M5 18.5 19 5.5M12 3v18M3 12h18" stroke="#8edcff" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="#8edcff"/></svg>
+      </div>
+      <div><h1>NEXUS</h1><p>OFFLINE NETWORK</p></div>
+    </div>
+    <div class="status-pill off" id="pill"><i class="dot"></i><span id="pillTxt">STARTING</span></div>
+  </header>
+
+  <div class="banner" id="permBanner">
+    Nearby-device permissions are required to discover and connect to other phones. Nothing is scanned until you allow them.
+    <br><button class="btn" onclick="NexusBridge.requestPermissions()">Grant permissions</button>
+  </div>
+
+  <!-- NETWORK -->
+  <section class="view on" id="v-net">
+    <h2>Your nearby network</h2>
+    <p class="subtitle">Live view of phones reachable directly or through relays.</p>
+
+    <section class="network-card">
+      <div class="card-head"><span class="eyebrow">Network topology</span><span class="live" id="liveTag">SCANNING</span></div>
+      <div class="network"><svg class="net-svg" id="topo" viewBox="0 0 420 190"></svg></div>
+      <div class="metrics">
+        <div class="metric"><strong id="mNodes">0</strong><span>NEARBY DEVICES</span></div>
+        <div class="metric"><strong id="mDirect">0</strong><span>DIRECT LINKS</span></div>
+        <div class="metric"><strong id="mHops">0</strong><span>MAX HOPS</span></div>
+      </div>
+    </section>
+
+    <div id="pendingBox"></div>
+
+    <div class="section-title"><h3>Connected devices</h3><span id="devCount">0</span></div>
+    <section class="devices" id="devList"></section>
+
+    <div class="section-title"><h3>This device</h3><span>IDENTITY</span></div>
+    <div class="info-list">
+      <div class="info-row"><span>Device name</span><b id="iName">-</b></div>
+      <div class="info-row"><span>Device ID</span><b id="iId">-</b></div>
+      <div class="info-row"><span>Fingerprint</span><b id="iFp">-</b></div>
+      <div class="info-row"><span>Bluetooth</span><b id="iBt">-</b></div>
+      <div class="info-row"><span>Wi-Fi radio</span><b id="iWifi">-</b></div>
+      <div class="info-row"><span>Relay mode</span><b id="iRelay">-</b></div>
+      <div class="info-row"><span>Queued messages</span><b id="iQ">0</b></div>
+    </div>
+
+    <div class="section-title"><h3>Network range</h3><span>INFO</span></div>
+    <p class="panel">Each link is chosen automatically between Bluetooth LE, Bluetooth Classic and Wi-Fi (Direct / hotspot / LAN) depending on what both phones support. Typical direct range is roughly 10 m on Bluetooth and up to about 60 m on Wi-Fi in open space; walls reduce it. Relay nodes extend the reach hop by hop. Real range depends on your devices and surroundings.</p>
+
+    <div class="quick">
+      <button onclick="NexusBridge.rescan();toast('Scanning for nearby devices')">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <b>Rescan</b><span>Look for nearby phones</span>
+      </button>
+      <button onclick="toggleRelay()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 8h14M5 16h14M8 5l-3 3 3 3M16 13l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <b>Relay mode</b><span id="relayHint">Forward messages</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- CHATS LIST -->
+  <section class="view" id="v-chats">
+    <h2>Messages</h2>
+    <p class="subtitle">End-to-end encrypted. Messages to unreachable devices wait in the queue.</p>
+    <div id="convoList"></div>
+  </section>
+
+  <!-- CHAT -->
+  <section class="view" id="v-chat">
+    <div class="chat-head">
+      <button class="back" onclick="showView('chats')" aria-label="Back">&#8249;</button>
+      <div><h2 id="chatTitle"></h2><small id="chatSub"></small></div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="composer">
+      <label class="icon-btn" for="filePick" aria-label="Attach file">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8-8a3.3 3.3 0 0 1 4.7 4.7l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.3-7.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </label>
+      <input type="file" id="filePick" style="display:none">
+      <input type="text" id="msgIn" placeholder="Message" autocomplete="off">
+      <button class="icon-btn" onclick="sendMsg()" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12 20 4l-4 16-4-6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <p class="note">Files up to 1 MB. Larger transfers are not supported yet.</p>
+  </section>
+
+  <!-- CALLS -->
+  <section class="view" id="v-calls">
+    <h2>Voice calls</h2>
+    <p class="subtitle">Device-to-device audio</p>
+    <div class="panel">
+      <h4>Not available yet</h4>
+      Offline voice calling is planned for Phase 5 and is not implemented in this build. There are no call controls here on purpose, so nothing pretends to work.
+      <br><br>
+      Reliable calling needs a low-latency audio stream over a direct Wi-Fi or Bluetooth link. Routing live audio through several relay hops adds delay and drops, so long-distance calls over the mesh will stay experimental when they are added.
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="v-set">
+    <h2>Settings</h2>
+    <p class="subtitle">Device, relay, privacy and storage</p>
+
+    <div class="field"><label>Device name</label>
+      <input id="sName" maxlength="24"><div class="btn-row"><button class="btn" onclick="saveName()">Save name</button></div></div>
+
+    <div class="toggle"><div><strong>Mesh node active</strong><small>Discover and connect to nearby phones. Runs as a foreground service.</small></div><div class="sw" id="swActive" onclick="toggleActive()"></div></div>
+    <div class="toggle"><div><strong>Relay mode</strong><small>Allow this phone to forward other devices' messages. Relay permission is yours to give or withdraw.</small></div><div class="sw" id="swRelay" onclick="toggleRelay()"></div></div>
+    <div class="toggle"><div><strong>Remember approved devices</strong><small>Reconnect to devices you already approved without asking again.</small></div><div class="sw" id="swTrust" onclick="toggleTrust()"></div></div>
+
+    <div class="field" style="margin-top:16px"><label>Group passphrase</label>
+      <input id="sPass" type="password" placeholder="Shared by everyone in the group chat">
+      <div class="btn-row"><button class="btn" onclick="savePass()">Set passphrase</button></div></div>
+    <p class="note" style="margin-top:0">Group (everyone) messages are encrypted with this passphrase. Devices with a different passphrase cannot read them. Default is a public value, so set your own.</p>
+
+    <div class="section-title"><h3>Blocked devices</h3><span id="blkCount">0</span></div>
+    <div id="blkList"></div>
+
+    <div class="section-title"><h3>Privacy and storage</h3><span></span></div>
+    <div class="btn-row">
+      <button class="btn danger" onclick="clearTrusted()">Forget approved devices</button>
+      <button class="btn danger" onclick="clearChats()">Clear chat history</button>
+    </div>
+
+    <div class="section-title"><h3>Bluetooth and Wi-Fi</h3><span></span></div>
+    <div class="panel">Radios are managed by Android. Keep Bluetooth and Wi-Fi turned on while using the mesh.
+      <div class="btn-row"><button class="btn ghost" onclick="toast('Open Android Settings > Connected devices to change Bluetooth or Wi-Fi')">How to change</button></div></div>
+
+    <div class="section-title"><h3>Battery</h3><span>INFO</span></div>
+    <p class="panel">Staying discoverable keeps radios awake and uses battery. Turn the mesh node off when you do not need it. Some phone makers aggressively stop background apps; if devices drop when the screen is off, allow unrestricted battery use for NEXUS Offline in Android settings.</p>
+  </section>
+</main>
+
+<nav class="bottom">
+  <button class="nav active" data-v="net" onclick="showView('net')"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="18" r="2.2" stroke="currentColor" stroke-width="1.5"/><circle cx="19" cy="18" r="2.2" stroke="currentColor" stroke-width="1.5"/><path d="m10.5 7-4 9m7-9 4 9M7.5 18h9" stroke="currentColor" stroke-width="1.5"/></svg>Network</button>
+  <button class="nav" data-v="chats" onclick="showView('chats')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-5 4v-4.6A2.5 2.5 0 0 1 4 13.5z" stroke="currentColor" stroke-width="1.5"/></svg>Chats<i class="badge" id="chatBadge">0</i></button>
+  <button class="nav" data-v="calls" onclick="showView('calls')"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h3l1.5 4-2 1.5a15 15 0 0 0 5.5 5.5l1.5-2 4 1.5v3A2 2 0 0 1 18.5 19C10.5 19 5 13.5 5 5.5A2 2 0 0 1 7 3.5Z" stroke="currentColor" stroke-width="1.5"/></svg>Calls</button>
+  <button class="nav" data-v="set" onclick="showView('set')"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Settings</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+var S=null,view='net',conv=null,unread={},files={};
+var chats=load('nx_chats',{});
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(){try{localStorage.setItem('nx_chats',JSON.stringify(chats))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(window.tt);window.tt=setTimeout(function(){t.classList.remove('show')},3200)}
+function hhmm(ts){var d=new Date(ts);return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+function bridge(){return window.NexusBridge}
+
+/* ---------- navigation ---------- */
+function showView(v){
+  view=v;
+  ['net','chats','chat','calls','set'].forEach(function(x){$('v-'+x).classList.toggle('on',x===v)});
+  var tab=v==='chat'?'chats':v;
+  document.querySelectorAll('.nav').forEach(function(n){n.classList.toggle('active',n.dataset.v===tab)});
+  if(v==='chats')renderConvos();
+  if(v==='chat')renderChat();
+  window.scrollTo(0,0);
+}
+window.nexusBack=function(){if(view==='chat'){showView('chats');return true}if(view!=='net'){showView('net');return true}return false};
+window.nexusPerm=function(ok){$('permBanner').style.display=ok?'none':'block'};
+
+/* ---------- events from Android ---------- */
+window.nexusEvent=function(str){
+  var e;try{e=JSON.parse(str)}catch(x){return}
+  if(e.t==='state'){S=e.s;renderAll()}
+  else if(e.t==='msg'){var c=e.dst==='*'?'*':e.from;addMsg(c,{id:e.id,out:false,text:e.text,ts:e.ts,who:e.fromName});if(!(view==='chat'&&conv===c)){unread[c]=(unread[c]||0)+1;updateBadge()}else renderChat()}
+  else if(e.t==='file'){var c2=e.dst==='*'?'*':e.from;files[e.id]={mime:e.mime,data:e.data,name:e.name};addMsg(c2,{id:e.id,out:false,file:{name:e.name,mime:e.mime,size:e.size},ts:e.ts,who:e.fromName});if(!(view==='chat'&&conv===c2)){unread[c2]=(unread[c2]||0)+1;updateBadge()}else renderChat()}
+  else if(e.t==='status'){setStatus(e.id,e.st)}
+  else if(e.t==='lost'){toast('Connection lost')}
+  else if(e.t==='error'){toast(e.m)}
+};
+function addMsg(c,m){chats[c]=chats[c]||[];chats[c].push(m);if(chats[c].length>300)chats[c].shift();save()}
+function setStatus(id,st){
+  for(var c in chats){chats[c].forEach(function(m){if(m.id===id){var rank={sending:0,queued:1,sent:2,delivered:3,failed:3};if(m.st==='delivered'&&st!=='failed')return;m.st=st}})}
+  save();if(view==='chat')renderChat();if(view==='chats')renderConvos();
+}
+function updateBadge(){var n=0;for(var k in unread)n+=unread[k];var b=$('chatBadge');b.textContent=n;b.style.display=n?'grid':'none'}
+
+/* ---------- rendering ---------- */
+function renderAll(){
+  if(!S)return;
+  var active=S.active;
+  $('pill').classList.toggle('off',!active);
+  $('pillTxt').textContent=active?(S.links.length?'CONNECTED':'NODE ACTIVE'):'NODE OFF';
+  $('liveTag').textContent=active?(S.links.length?'LIVE':'SCANNING'):'OFFLINE';
+  var maxh=0;S.nodes.forEach(function(n){if(n.hops>maxh)maxh=n.hops});
+  $('mNodes').textContent=S.nodes.filter(function(n){return n.hops>0}).length;
+  $('mDirect').textContent=S.links.length;
+  $('mHops').textContent=maxh;
+  $('iName').textContent=S.me.name;$('iId').textContent=S.me.id;$('iFp').textContent=S.me.fp;
+  $('iBt').innerHTML=S.bt?'<span class="ok">On</span>':'<span class="bad">Off</span>';
+  $('iWifi').innerHTML=S.wifi?'<span class="ok">On</span>':'<span class="bad">Off</span>';
+  $('iRelay').textContent=S.relay?'Allowed':'Off';
+  $('iQ').textContent=S.queued;
+  $('relayHint').textContent=S.relay?'On - tap to turn off':'Off - tap to turn on';
+  $('swActive').classList.toggle('on',S.active);
+  $('swRelay').classList.toggle('on',S.relay);
+  $('swTrust').classList.toggle('on',S.autoTrust);
+  if(document.activeElement!==$('sName'))$('sName').value=S.me.name;
+  drawTopo();renderPending();renderDevices();renderBlocked();
+  if(view==='chats')renderConvos();
+  if(view==='chat')renderChatHeader();
+}
+
+function drawTopo(){
+  var cx=210,cy=95,svg=$('topo'),h='';
+  var pos={};pos[S.me.id]=[cx,cy];
+  var byHop={};S.nodes.forEach(function(n){if(n.hops>0){(byHop[n.hops]=byHop[n.hops]||[]).push(n)}});
+  Object.keys(byHop).forEach(function(k){
+    var arr=byHop[k],hp=+k,rx=Math.min(185,hp*68),ry=Math.min(72,hp*34);
+    arr.forEach(function(n,i){var a=(-Math.PI/2)+(i+hp*0.6)*(2*Math.PI/arr.length);pos[n.id]=[cx+rx*Math.cos(a),cy+ry*Math.sin(a)]})
+  });
+  var direct={};S.links.forEach(function(l){direct[l.id]=1});
+  S.edges.forEach(function(e){var a=pos[e[0]],b=pos[e[1]];if(!a||!b)return;
+    var isD=(e[0]===S.me.id&&direct[e[1]])||(e[1]===S.me.id&&direct[e[0]]);
+    h+='<line class="edge'+(isD?' direct':'')+'" x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/>'});
+  if(S.active)h+='<circle class="pulse-ring" cx="'+cx+'" cy="'+cy+'" r="20"/>';
+  S.nodes.forEach(function(n){var p=pos[n.id];if(!p)return;
+    h+='<g class="nodeg" style="transform-origin:'+p[0]+'px '+p[1]+'px"><rect x="'+(p[0]-15)+'" y="'+(p[1]-15)+'" width="30" height="30" rx="9" fill="#14293b" stroke="'+(n.relay?'#47718a':'#8a6a47')+'"/><rect x="'+(p[0]-5)+'" y="'+(p[1]-8)+'" width="10" height="16" rx="2" fill="none" stroke="#a8dfff"/><text x="'+p[0]+'" y="'+(p[1]+27)+'">'+esc(n.name.slice(0,12))+'</text></g>'});
+  h+='<g><rect x="'+(cx-17)+'" y="'+(cy-17)+'" width="34" height="34" rx="10" fill="#17475a" stroke="#64c8e4"/><rect x="'+(cx-5.5)+'" y="'+(cy-9)+'" width="11" height="18" rx="2" fill="none" stroke="#9be8e3"/><text x="'+cx+'" y="'+(cy+31)+'" style="font-size:9px;fill:#9be8e3;text-anchor:middle">YOU</text></g>';
+  if(S.nodes.length===0)h+='<text x="210" y="172" style="font-size:10px;fill:#71839a;text-anchor:middle">'+(S.active?'Searching for nearby devices':'Mesh node is off')+'</text>';
+  svg.innerHTML=h;
+}
+
+function renderPending(){
+  var h='';
+  S.pending.forEach(function(p){
+    h+='<div class="pending"><b>'+esc(p.name)+'</b> wants to connect<div class="code">'+esc(p.digits)+'</div>Check that the same code is shown on the other phone before accepting.'+
+    '<div class="btn-row"><button class="btn" onclick="NexusBridge.approve(\''+p.ep+'\',true)">Accept</button><button class="btn danger" onclick="NexusBridge.approve(\''+p.ep+'\',false)">Reject</button><button class="btn danger" onclick="NexusBridge.block(\''+p.id+'\')">Block</button></div></div>'});
+  $('pendingBox').innerHTML=h;
+}
+
+function renderDevices(){
+  var list=S.nodes.filter(function(n){return n.hops>0}).sort(function(a,b){return a.hops-b.hops});
+  $('devCount').textContent=list.length;
+  if(!list.length){$('devList').innerHTML='<div class="empty">'+(S.active?'No devices connected yet. Open NEXUS Offline on another phone nearby and approve the connection request.':'Turn the mesh node on in Settings to find nearby devices.')+'</div>';return}
+  $('devList').innerHTML=list.map(function(n){
+    var lbl=n.hops===1?'Direct link':n.hops+' hops away';
+    return '<div class="device" style="flex-wrap:wrap"><div class="device-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg></div>'+
+    '<div class="device-info"><strong>'+esc(n.name)+'</strong><small>'+lbl+(n.relay?' / relay':' / no relay')+'</small><small>'+esc(n.fp||'key pending')+'</small></div>'+
+    '<span class="'+(n.verified?'chip good':'chip')+'">'+(n.verified?'VERIFIED':'UNVERIFIED')+'</span>'+
+    '<div class="row-actions" style="width:100%"><button class="btn" onclick="openChat(\''+n.id+'\')">Message</button>'+
+    '<button class="btn ghost" onclick="NexusBridge.verify(\''+n.id+'\','+(!n.verified)+')">'+(n.verified?'Unverify':'Mark verified')+'</button>'+
+    '<button class="btn danger" onclick="if(confirm(\'Block this device?\'))NexusBridge.block(\''+n.id+'\')">Block</button></div></div>'}).join('');
+}
+
+function renderBlocked(){
+  $('blkCount').textContent=S.blocked.length;
+  $('blkList').innerHTML=S.blocked.length?S.blocked.map(function(id){return '<div class="info-row"><b>'+esc(id)+'</b><button class="btn" onclick="NexusBridge.unblock(\''+id+'\')">Unblock</button></div>'}).join(''):'<div class="empty">No blocked devices.</div>';
+}
+
+function nameFor(id){if(id==='*')return 'Everyone (group)';if(!S)return id;for(var i=0;i<S.nodes.length;i++)if(S.nodes[i].id===id)return S.nodes[i].name;return id}
+function lastOf(c){var a=chats[c];if(!a||!a.length)return null;return a[a.length-1]}
+
+function renderConvos(){
+  var ids=['*'];var seen={'*':1};
+  if(S)S.nodes.forEach(function(n){if(n.hops>0){ids.push(n.id);seen[n.id]=1}});
+  Object.keys(chats).forEach(function(k){if(!seen[k])ids.push(k)});
+  $('convoList').innerHTML=ids.map(function(c){
+    var l=lastOf(c),u=unread[c]||0;
+    var prev=l?(l.file?('File: '+l.file.name):l.text):'No messages yet';
+    return '<div class="convo" onclick="openChat(\''+c+'\')"><div class="device-icon">'+(c==='*'?'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 19c.5-3 2.7-4.6 5.5-4.6s5 1.6 5.5 4.6M15.5 14.8c2.3-.3 4.2.8 5 3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>':'<svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg>')+'</div>'+
+    '<div class="device-info"><strong>'+esc(nameFor(c))+'</strong><div class="last">'+esc(prev)+'</div></div>'+(u?'<span class="unread">'+u+'</span>':'')+'</div>'}).join('');
+}
+
+function openChat(c){conv=c;unread[c]=0;updateBadge();showView('chat')}
+function renderChatHeader(){
+  $('chatTitle').textContent=nameFor(conv);
+  var sub='';
+  if(conv==='*')sub='Broadcast to all reachable devices';
+  else if(S){var n=S.nodes.filter(function(x){return x.id===conv})[0];sub=n&&n.hops>0?(n.hops===1?'Direct link':n.hops+' hops away'):'Not reachable - messages will be queued'}
+  $('chatSub').textContent=sub;
+}
+function stLabel(m){if(!m.out)return '';return {sending:'Sending',queued:'Queued',sent:'Sent',delivered:'Delivered',failed:'Failed'}[m.st||'sending']}
+function renderChat(){
+  renderChatHeader();
+  var a=chats[conv]||[];
+  $('msgs').innerHTML=a.length?a.map(function(m,i){
+    var body='';
+    if(m.file){
+      var f=files[m.id];
+      if(m.file.mime&&m.file.mime.indexOf('image/')===0&&f)body='<img src="data:'+f.mime+';base64,'+f.data+'" alt="">';
+      else body='<b>'+esc(m.file.name)+'</b> <small>('+Math.round(m.file.size/1024)+' KB)</small>'+(!m.out&&f?'<div class="btn-row"><button class="btn" onclick="saveF(\''+m.id+'\')">Save</button></div>':'');
+    } else body=esc(m.text);
+    return '<div class="bubble '+(m.out?'out':'in')+'">'+(!m.out&&conv==='*'&&m.who?'<div class="who">'+esc(m.who)+'</div>':'')+body+'<div class="meta"><span>'+hhmm(m.ts)+'</span><span>'+stLabel(m)+'</span></div></div>'}).join(''):'<div class="empty">No messages yet.</div>';
+  var box=$('msgs');box.scrollTop=box.scrollHeight;
+}
+function saveF(id){var f=files[id];if(!f)return;var p=bridge().saveFile(f.name,f.data);toast(p?('Saved: '+p):'Could not save file')}
+
+/* ---------- actions ---------- */
+function sendMsg(){
+  var t=$('msgIn').value.trim();if(!t||!conv)return;
+  var id=bridge().sendText(conv,t);
+  addMsg(conv,{id:id,out:true,text:t,ts:Date.now(),st:'sending'});
+  $('msgIn').value='';renderChat();
+}
+$('msgIn').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg()});
+$('filePick').addEventListener('change',function(){
+  var f=this.files[0];this.value='';if(!f||!conv)return;
+  if(f.size>1048576){toast('File is larger than 1 MB');return}
+  var r=new FileReader();
+  r.onload=function(){
+    var b64=String(r.result).split(',')[1]||'';
+    var mime=f.type||'application/octet-stream';
+    var id=bridge().sendFile(conv,f.name,mime,b64);
+    files[id]={mime:mime,data:b64,name:f.name};
+    addMsg(conv,{id:id,out:true,file:{name:f.name,mime:mime,size:f.size},ts:Date.now(),st:'sending'});
+    renderChat();
+  };
+  r.onerror=function(){toast('Could not read file')};
+  r.readAsDataURL(f);
+});
+function toggleRelay(){if(S)bridge().setRelay(!S.relay)}
+function toggleTrust(){if(S)bridge().setAutoTrust(!S.autoTrust)}
+function toggleActive(){if(S)bridge().setActive(!S.active)}
+function saveName(){var v=$('sName').value.trim();if(!v){toast('Enter a name');return}bridge().setName(v);toast('Name saved')}
+function savePass(){var v=$('sPass').value;if(v.length<4){toast('Use at least 4 characters');return}bridge().setPass(v);$('sPass').value='';toast('Passphrase updated')}
+function clearTrusted(){if(confirm('Forget all approved devices? You will be asked again on next connection.')){bridge().clearTrusted();toast('Approved devices cleared')}}
+function clearChats(){if(confirm('Delete all chat history on this phone?')){chats={};save();unread={};updateBadge();if(view==='chats')renderConvos();toast('Chat history cleared')}}
+
+/* ---------- start ---------- */
+if(window.NexusBridge){NexusBridge.ready()}
+else{$('pillTxt').textContent='NO ANDROID BRIDGE';toast('Open this UI inside the Android app')}
+</script>
+</body>
+</html>
