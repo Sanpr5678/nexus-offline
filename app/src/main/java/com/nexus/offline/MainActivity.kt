@@ -58,10 +58,8 @@ class MainActivity : AppCompatActivity() {
         // Keep this runtime permission in the request on every supported API level.
         permissions += Manifest.permission.ACCESS_COARSE_LOCATION
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-            // Android 8.0-12L: legacy Bluetooth scanning and location-based scan permission.
-            permissions += Manifest.permission.ACCESS_FINE_LOCATION
-        }
+        // Nearby Connections may require FINE_LOCATION even on Android 13-16.
+        permissions += Manifest.permission.ACCESS_FINE_LOCATION
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
             permissions += Manifest.permission.BLUETOOTH
