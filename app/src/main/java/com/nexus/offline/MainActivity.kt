@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var web: WebView
     private var chooserCb: ValueCallback<Array<Uri>>? = null
+    private var waitingForSettings = false
     private val engine get() = NexusApp.engine
 
     private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
@@ -120,6 +121,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAppSettings() {
+        waitingForSettings = true
         val intent = Intent(
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
             Uri.fromParts("package", packageName, null)
@@ -199,8 +201,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // If the user granted permissions in Android Settings, start discovery on return.
-        if (::web.isInitialized && hasPerms()) {
-            js("window.nexusPerm&&window.nexusPerm(true)")
+        if (waitingForSettings && hasPerms()) {
+            waitingForSettings = false
+            if (::web.isInitialized) js("window.nexusPerm&&window.nexusPerm(true)")
             ContextCompat.startForegroundService(this, Intent(this, MeshService::class.java))
         }
     }
