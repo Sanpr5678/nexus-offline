@@ -10,12 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        id: s1
       - uses: actions/setup-java@v4
+        id: s2
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
+        id: s3
         with:
           gradle-version: '8.5'
       - name: Build
@@ -37,7 +39,7 @@ jobs:
         if: failure()
         run: |
           mkdir -p /tmp/l
-          if [ -f build.log ]; then tail -n 250 build.log > /tmp/l/build.log; else echo "Failed before the gradle step (setup problem)." > /tmp/l/build.log; fi
+          if [ -f build.log ]; then tail -n 250 build.log > /tmp/l/build.log; else echo "Failed before gradle. checkout=${{ steps.s1.outcome }} java=${{ steps.s2.outcome }} setup-gradle=${{ steps.s3.outcome }} ANDROID_HOME=$ANDROID_HOME" > /tmp/l/build.log; fi
           git config user.name ci
           git config user.email ci@users.noreply.github.com
           git checkout --orphan buildlog
