@@ -18,7 +18,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.5'
-      - run: gradle assembleDebug --no-daemon
+      - name: Build
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
       - run: cp app/build/outputs/apk/debug/app-debug.apk NexusOffline.apk
       - uses: actions/upload-artifact@v4
         with:
@@ -30,3 +33,16 @@ jobs:
         run: |
           gh release delete latest --yes --cleanup-tag || true
           gh release create latest NexusOffline.apk --title "NEXUS Offline (latest build)" --notes "Debug APK built from the latest commit." --target "$GITHUB_SHA"
+      - name: Save error log to branch buildlog
+        if: failure()
+        run: |
+          mkdir -p /tmp/l
+          if [ -f build.log ]; then tail -n 250 build.log > /tmp/l/build.log; else echo "Failed before the gradle step (setup problem)." > /tmp/l/build.log; fi
+          git config user.name ci
+          git config user.email ci@users.noreply.github.com
+          git checkout --orphan buildlog
+          git rm -rf . -q
+          cp /tmp/l/build.log build.log
+          git add build.log
+          git commit -q -m "build log"
+          git push -f origin buildlog
