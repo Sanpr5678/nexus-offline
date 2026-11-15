@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
@@ -16,7 +17,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.json.JSONObject
 import java.io.File
@@ -32,44 +35,103 @@ class MainActivity : AppCompatActivity() {
         chooserCb = null
     }
 
-    private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        onPermsChanged()
+    // Keep the permission result handling in one place. A denied permission must never
+    // silently leave the UI looking as if discovery is running.
+    private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+        val missing = requiredPerms().filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) {
+            onPermsChanged()
+        } else {
+            onPermsChanged()
+            showPermissionHelp(missing)
+        }
     }
 
     private fun requiredPerms(): List<String> {
-        val l = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= 31) {
-            l += Manifest.permission.BLUETOOTH_ADVERTISE
-            l += Manifest.permission.BLUETOOTH_CONNECT
-            l += Manifest.permission.BLUETOOTH_SCAN
-        }
-        // Request COARSE_LOCATION on every Android version: Google Nearby Connections
-        // can report MISSING_PERMISSION_ACCESS_COARSE_LOCATION during discovery even
-        // on newer Android versions / some Google Play services implementations.
-        l += Manifest.permission.ACCESS_COARSE_LOCATION
+        val permissions = mutableListOf<String>()
 
-        // On Android 12L and below, location-based Bluetooth scanning also needs FINE.
-        // Request COARSE first, then FINE, as required by Android's location permission flow.
-        if (Build.VERSION.SDK_INT <= 32) {
-            l += Manifest.permission.ACCESS_FINE_LOCATION
+        // Google Nearby Connections can explicitly fail discovery with
+        // MISSING_PERMISSION_ACCESS_COARSE_LOCATION, including on Android 13-16.
+        // Keep this runtime permission in the request on every supported API level.
+        permissions += Manifest.permission.ACCESS_COARSE_LOCATION
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            // Android 8.0-12L: legacy Bluetooth scanning and location-based scan permission.
+            permissions += Manifest.permission.ACCESS_FINE_LOCATION
         }
-        if (Build.VERSION.SDK_INT >= 33) {
-            l += Manifest.permission.NEARBY_WIFI_DEVICES
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            permissions += Manifest.permission.BLUETOOTH
+            permissions += Manifest.permission.BLUETOOTH_ADMIN
+        } else {
+            // Android 12+: Nearby devices / Bluetooth runtime permissions.
+            permissions += Manifest.permission.BLUETOOTH_ADVERTISE
+            permissions += Manifest.permission.BLUETOOTH_CONNECT
+            permissions += Manifest.permission.BLUETOOTH_SCAN
         }
-        return l
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+: required when Nearby Connections uses Wi-Fi transports.
+            permissions += Manifest.permission.NEARBY_WIFI_DEVICES
+        }
+
+        return permissions.distinct()
     }
 
-    private fun hasPerms() = requiredPerms().all {
+    private fun hasPerms(): Boolean = requiredPerms().all {
         ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPerms() {
-        val all = requiredPerms().toMutableList()
-        if (Build.VERSION.SDK_INT >= 33) all += Manifest.permission.POST_NOTIFICATIONS
-        permLauncher.launch(all.toTypedArray())
+        val missing = requiredPerms().filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) {
+            onPermsChanged()
+            return
+        }
+        permLauncher.launch(missing.toTypedArray())
+    }
+
+    private fun showPermissionHelp(missing: List<String>) {
+        val permanentlyDenied = missing.any {
+            !ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+        }
+        val message = if (permanentlyDenied) {
+            "NEXUS ko device discovery ke liye Location / Nearby Devices permission chahiye. Android ne permission prompt dobara dikhana band kar diya hai. App Settings kholkar required permissions Allow karo, phir NEXUS par wapas aao."
+        } else {
+            "Nearby phones discover karne ke liye Location / Nearby Devices permission allow karo. Android 13-16 par bhi Google Nearby Connections kuch devices par ACCESS_COARSE_LOCATION maang sakta hai. NEXUS is permission ko sirf nearby discovery ke liye use karta hai."
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Permission required")
+            .setMessage(message)
+            .setNegativeButton("Cancel", null)
+
+        if (permanentlyDenied) {
+            dialog.setPositiveButton("Open app settings") { _, _ -> openAppSettings() }
+        } else {
+            dialog.setPositiveButton("Try again") { _, _ -> requestPerms() }
+            dialog.setNeutralButton("App settings") { _, _ -> openAppSettings() }
+        }
+        dialog.show()
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        )
+        startActivity(intent)
     }
 
     private fun startMesh() {
+        if (!hasPerms()) {
+            requestPerms()
+            return
+        }
         ContextCompat.startForegroundService(this, Intent(this, MeshService::class.java))
     }
 
@@ -79,14 +141,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun onPermsChanged() {
         val ok = hasPerms()
-        js("window.nexusPerm&&window.nexusPerm($ok)")
-        if (ok) startMesh()
+        if (::web.isInitialized) js("window.nexusPerm&&window.nexusPerm($ok)")
+        if (ok) {
+            ContextCompat.startForegroundService(this, Intent(this, MeshService::class.java))
+        } else {
+            stopMesh()
+        }
     }
 
     private fun js(code: String) = web.evaluateJavascript(code, null)
 
     private fun pushEvent(e: JSONObject) {
-        js("window.nexusEvent&&window.nexusEvent(" + JSONObject.quote(e.toString()) + ")")
+        if (::web.isInitialized) {
+            js("window.nexusEvent&&window.nexusEvent(" + JSONObject.quote(e.toString()) + ")")
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -122,10 +190,19 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 web.evaluateJavascript("window.nexusBack?window.nexusBack():false") { r ->
-                    if (r != "true") moveTaskToBack(true) // keep the mesh node running
+                    if (r != "true") moveTaskToBack(true)
                 }
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // If the user granted permissions in Android Settings, start discovery on return.
+        if (::web.isInitialized && hasPerms()) {
+            js("window.nexusPerm&&window.nexusPerm(true)")
+            ContextCompat.startForegroundService(this, Intent(this, MeshService::class.java))
+        }
     }
 
     override fun onDestroy() {
@@ -134,7 +211,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    /** Everything below is invoked from JS; all engine work is posted to the main thread. */
     inner class Bridge {
         @JavascriptInterface
         fun ready() = runOnUiThread {
