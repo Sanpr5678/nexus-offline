@@ -233,6 +233,7 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
       <div class="perm"><div><b>Nearby devices and Bluetooth</b><span>Find and connect to phones around you.</span></div></div>
       <div class="perm"><div><b>Location (Android 11 and older)</b><span>Android requires it for Bluetooth scanning. Your location is not read or stored.</span></div></div>
       <div class="perm"><div><b>Microphone</b><span>Only used during a voice call.</span></div></div>
+      <div class="perm"><div><b>Background running</b><span>Lets the mesh keep working when the app is closed, so your phone can relay messages for others. Android will ask once.</span></div></div>
       <div class="perm"><div><b>Notifications</b><span>Shows that the mesh node is running and alerts you to incoming calls.</span></div></div>
       <p id="obPermMsg" style="margin-top:6px"></p>
       <button class="big-btn" id="obPermBtn" onclick="obStep2()">Allow permissions</button>
@@ -265,6 +266,11 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
   <div class="banner" id="permBanner">
     Nearby-device permissions are required to discover and connect to other phones. Nothing is scanned until you allow them.
     <br><button class="btn" onclick="NexusBridge.requestPermissions()">Grant permissions</button>
+  </div>
+
+  <div class="banner" id="battBanner">
+    Background running is not allowed yet. Without it Android may stop the mesh when the app is closed, and your phone will not relay messages for others.
+    <br><button class="btn" onclick="NexusBridge.batterySettings()">Allow background running</button>
   </div>
 
   <!-- NETWORK -->
@@ -430,6 +436,7 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
 <div class="toast" id="toast"></div>
 
 <script>
+var battOk=true;
 var S=null,view='net',conv=null,unread={},files={},permOk=false,permAsked=false,obStep=0;
 var chats=load('nx_chats',{});
 var contacts=load('nx_contacts',{});
@@ -480,11 +487,12 @@ window.nexusBack=function(){
   if(view==='chat'){showView('chats');return true}
   if(view!=='net'){showView('net');return true}
   return false};
+window.nexusBattery=function(ok){battOk=ok;$('battBanner').style.display=(ok||$('onb').classList.contains('on'))?'none':'block'};
 window.nexusPerm=function(ok){
   permOk=ok;
   $('permBanner').style.display=(ok||$('onb').classList.contains('on'))?'none':'block';
   if($('onb').classList.contains('on')&&obStep===2){
-    if(ok)obGo(3);else if(permAsked){$('obPermMsg').textContent='Permissions are needed for NEXUS to work. Tap the button to try again, or allow them in Android Settings > Apps > NEXUS Offline > Permissions.';$('obPermMsg').style.color='#ff9aa2'}
+    if(ok){if(!battOk)bridge().batterySettings();obGo(3)}else if(permAsked){$('obPermMsg').textContent='Permissions are needed for NEXUS to work. Tap the button to try again, or allow them in Android Settings > Apps > NEXUS Offline > Permissions.';$('obPermMsg').style.color='#ff9aa2'}
   }
 };
 
@@ -824,8 +832,8 @@ function obGo(n){
   if(n===3&&S)$('obId').textContent=fmtId(S.me.id);
 }
 function obStep1(){var v=$('obName').value.trim();if(v)bridge().setName(v);obGo(2)}
-function obStep2(){if(permOk){obGo(3);return}permAsked=true;bridge().requestPermissions()}
-function obFinish(){try{localStorage.setItem('nx_onb','1')}catch(e){}$('onb').classList.remove('on');obStep=0;nexusPerm(permOk);if(bridge())bridge().rescan()}
+function obStep2(){if(permOk){if(!battOk)bridge().batterySettings();obGo(3);return}permAsked=true;bridge().requestPermissions()}
+function obFinish(){try{localStorage.setItem('nx_onb','1')}catch(e){}$('onb').classList.remove('on');obStep=0;nexusPerm(permOk);nexusBattery(battOk);if(bridge())bridge().rescan()}
 var onboarded=false;try{onboarded=localStorage.getItem('nx_onb')==='1'}catch(e){}
 if(!onboarded){$('onb').classList.add('on');obGo(1)}
 

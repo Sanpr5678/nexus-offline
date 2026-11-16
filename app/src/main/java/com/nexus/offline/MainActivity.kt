@@ -238,8 +238,15 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
     }
 
+    private fun batteryOk(): Boolean = try {
+        (getSystemService(Context.POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(packageName)
+    } catch (e: Exception) {
+        true
+    }
+
     override fun onResume() {
         super.onResume()
+        if (::web.isInitialized) js("window.nexusBattery&&window.nexusBattery(" + batteryOk() + ")")
         // If the user granted permissions in Android Settings, start discovery on return.
         if (waitingForSettings && hasPerms()) {
             waitingForSettings = false
@@ -260,6 +267,7 @@ class MainActivity : AppCompatActivity() {
             engine.attach { e -> pushEvent(e) }
             val ok = hasPerms()
             js("window.nexusPerm&&window.nexusPerm($ok)")
+            js("window.nexusBattery&&window.nexusBattery(" + batteryOk() + ")")
             if (ok) startMesh()
             engine.emitState()
         }
@@ -283,8 +291,6 @@ class MainActivity : AppCompatActivity() {
                     startActivity(
                         Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
                     )
-                } else {
-                    pushEvent(JSONObject().put("t", "error").put("m", "Background running is already allowed."))
                 }
             } catch (e: Exception) {
                 try { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } catch (x: Exception) { }
