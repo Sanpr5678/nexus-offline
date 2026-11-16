@@ -139,9 +139,118 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
 .nav .badge{position:absolute;top:2px;right:28%;min-width:14px;height:14px;border-radius:7px;background:var(--blue);color:#04121f;font-size:9px;font-weight:700;display:none;place-items:center;padding:0 4px}
 .nav{position:relative}
 .toast{white-space:normal;max-width:min(92vw,420px);text-align:center}
+
+/* ---- v2: onboarding, sheets, groups, calls ---- */
+.onb{position:fixed;inset:0;z-index:30;background:radial-gradient(ellipse at 50% -20%,#17304a 0%,#0a1220 42%,#080d16 78%);display:none;overflow-y:auto}
+.onb.on{display:block}
+.onb-inner{width:min(100%,520px);margin:auto;min-height:100%;padding:34px 22px 40px;display:flex;flex-direction:column}
+.onb-dots{display:flex;gap:7px;margin-bottom:34px}
+.onb-dots i{height:3px;flex:1;border-radius:2px;background:#1c2b3d;transition:background .4s}
+.onb-dots i.on{background:#66b9ff}
+.onb-step{display:none;flex:1;flex-direction:column;animation:fade .35s ease}
+.onb-step.on{display:flex}
+.onb-step h2{font-size:26px;margin:18px 0 8px}
+.onb-step p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 20px}
+.onb .logo{width:56px;height:56px;border-radius:16px}
+.onb .logo svg{width:32px;height:32px}
+.perm{display:flex;gap:12px;padding:13px;background:#0e1825;border:1px solid #1b2a3a;border-radius:14px;margin-bottom:9px}
+.perm b{font-size:12px;display:block}
+.perm span{font-size:11px;color:var(--muted);display:block;margin-top:4px;line-height:1.5}
+.big-btn{margin-top:auto;border:1px solid #3c88ad;background:linear-gradient(145deg,#17506b,#113447);color:#e6f6ff;border-radius:14px;padding:15px;font-size:14px;font-weight:600;cursor:pointer;transition:transform .15s}
+.big-btn:active{transform:scale(.97)}
+.big-btn.sec{margin-top:10px;background:transparent;border-color:#2d5874;color:#bce7ff;font-weight:500}
+.idcode{font-size:34px;letter-spacing:6px;text-align:center;font-weight:700;color:#bfe9ff;padding:26px 8px;margin:6px 0 14px;border:1px solid #2d5874;border-radius:18px;background:linear-gradient(155deg,#0f2233,#0b1622);word-break:break-all}
+.idcode.small{font-size:22px;letter-spacing:4px;padding:16px 8px}
+.sheet-bg{position:fixed;inset:0;background:#000a;z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-bg.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:50%;bottom:0;width:min(100%,520px);transform:translate(-50%,105%);z-index:41;background:#0d1724;border:1px solid #1d2b3d;border-bottom:0;border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:88vh;overflow-y:auto}
+.sheet.on{transform:translate(-50%,0)}
+.sheet h3{margin:0 0 6px;font-size:17px}
+.sheet p.hint{font-size:11px;color:var(--muted);line-height:1.55;margin:0 0 14px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.seg button{border:1px solid var(--line);background:#0e1825;color:var(--text);border-radius:13px;padding:12px;text-align:left;cursor:pointer;transition:border-color .2s,background .2s}
+.seg button.on{border-color:#3c88ad;background:#12303f}
+.seg b{display:block;font-size:12px}
+.seg span{display:block;font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
+.convo .chip{margin-left:auto}
+.section-gap{height:6px}
+.callscr{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;padding:calc(34px + env(safe-area-inset-top)) 22px calc(34px + env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% 0%,#17304a 0%,#0a1220 55%,#070b13 100%)}
+.callscr.on{display:flex;animation:fade .3s ease}
+.call-top{font-size:11px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;text-align:center}
+.call-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%}
+.avatar{position:relative;width:104px;height:104px;border-radius:32px;background:linear-gradient(145deg,#1b3b52,#102233);border:1px solid #47718a;display:grid;place-items:center;margin-bottom:26px}
+.avatar svg{width:42px;height:42px;color:#a8dfff}
+.avatar .ring{position:absolute;inset:0;border-radius:32px;border:1px solid #66b9ff;opacity:0}
+.callscr.ringing .avatar .ring{animation:cring 2.2s ease-out infinite}
+.callscr.ringing .avatar .ring.r2{animation-delay:1.1s}
+@keyframes cring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+.call-center h2{font-size:26px;margin:0 0 8px}
+.call-center p{margin:0;color:var(--muted);font-size:13px}
+.qbars{display:flex;gap:4px;align-items:flex-end;height:18px;justify-content:center;margin-top:16px}
+.qbars i{width:6px;border-radius:2px;background:#1f3144;transition:background .3s}
+.qbars i:nth-child(1){height:6px}.qbars i:nth-child(2){height:12px}.qbars i:nth-child(3){height:18px}
+.qbars.q1 i:nth-child(1){background:#ff737d}
+.qbars.q2 i:nth-child(-n+2){background:#f0cf8a}
+.qbars.q3 i{background:#65d6a5}
+.qtext{font-size:11px;color:var(--muted);margin-top:8px}
+.call-actions{display:flex;gap:18px;justify-content:center;width:100%}
+.cbtn{width:64px;height:64px;border-radius:50%;border:1px solid #2d5874;background:#122a3b;color:#bce7ff;cursor:pointer;display:grid;place-items:center;transition:transform .15s,background .2s}
+.cbtn:active{transform:scale(.92)}
+.cbtn svg{width:26px;height:26px}
+.cbtn.on{background:#bfe9ff;color:#06131f}
+.cbtn.end,.cbtn.rej{background:#c4313c;border-color:#e2525d;color:#fff}
+.cbtn.acc{background:#1f9d6b;border-color:#3cc58d;color:#fff}
+.cbtn-wrap{text-align:center;font-size:10px;color:var(--muted)}
+.cbtn-wrap .cbtn{margin:0 auto 8px}
+.calllog{display:grid;gap:8px}
+.logrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 13px;background:#0e1825;border:1px solid #1b2a3a;border-radius:13px;font-size:11px}
+.logrow small{display:block;color:var(--muted);margin-top:3px;font-size:10px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.chat-head .icon-btn{margin-left:auto;width:38px;height:38px}
+.chat-head .icon-btn+.icon-btn{margin-left:0}
+.inline-form{display:flex;gap:8px}
+.inline-form input{flex:1;background:#0c1623;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px;font-size:12px;outline:none}
 </style>
 </head>
 <body>
+
+<!-- ONBOARDING -->
+<div class="onb" id="onb">
+  <div class="onb-inner">
+    <div class="onb-dots"><i id="od1"></i><i id="od2"></i><i id="od3"></i></div>
+
+    <div class="onb-step" id="ob1">
+      <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5.5 19 18.5M5 18.5 19 5.5M12 3v18M3 12h18" stroke="#8edcff" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="3" fill="#8edcff"/></svg></div>
+      <h2>Welcome to NEXUS</h2>
+      <p>Talk to nearby phones without internet, SIM or mobile network. Every phone you connect can also relay messages further, so the network grows with each device.</p>
+      <div class="field"><label>Your name</label><input id="obName" maxlength="24" placeholder="How others will see you"></div>
+      <button class="big-btn" onclick="obStep1()">Continue</button>
+    </div>
+
+    <div class="onb-step" id="ob2">
+      <h2>Allow permissions</h2>
+      <p>Android needs your permission before this app can find and talk to nearby phones. Nothing leaves your phone to any server.</p>
+      <div class="perm"><div><b>Nearby devices and Bluetooth</b><span>Find and connect to phones around you.</span></div></div>
+      <div class="perm"><div><b>Location (Android 11 and older)</b><span>Android requires it for Bluetooth scanning. Your location is not read or stored.</span></div></div>
+      <div class="perm"><div><b>Microphone</b><span>Only used during a voice call.</span></div></div>
+      <div class="perm"><div><b>Notifications</b><span>Shows that the mesh node is running and alerts you to incoming calls.</span></div></div>
+      <p id="obPermMsg" style="margin-top:6px"></p>
+      <button class="big-btn" id="obPermBtn" onclick="obStep2()">Allow permissions</button>
+    </div>
+
+    <div class="onb-step" id="ob3">
+      <h2>Your ID code</h2>
+      <p>This is your address on NEXUS. Give it to anyone who wants to message or call you. You can find it again in Settings.</p>
+      <div class="idcode" id="obId">--------</div>
+      <div class="btn-row" style="justify-content:center;margin-bottom:20px">
+        <button class="btn" onclick="copyId()">Copy</button>
+        <button class="btn" onclick="shareId()">Share</button>
+      </div>
+      <button class="big-btn" onclick="obFinish()">Start NEXUS</button>
+    </div>
+  </div>
+</div>
+
 <main class="app">
   <header class="top">
     <div class="brand">
@@ -181,7 +290,7 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
     <div class="section-title"><h3>This device</h3><span>IDENTITY</span></div>
     <div class="info-list">
       <div class="info-row"><span>Device name</span><b id="iName">-</b></div>
-      <div class="info-row"><span>Device ID</span><b id="iId">-</b></div>
+      <div class="info-row"><span>ID code</span><b id="iId">-</b></div>
       <div class="info-row"><span>Fingerprint</span><b id="iFp">-</b></div>
       <div class="info-row"><span>Bluetooth</span><b id="iBt">-</b></div>
       <div class="info-row"><span>Wi-Fi radio</span><b id="iWifi">-</b></div>
@@ -207,8 +316,17 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
   <!-- CHATS LIST -->
   <section class="view" id="v-chats">
     <h2>Messages</h2>
-    <p class="subtitle">End-to-end encrypted. Messages to unreachable devices wait in the queue.</p>
+    <p class="subtitle">End-to-end encrypted private chats, groups and the open channel.</p>
+    <div class="quick" style="margin-top:0;margin-bottom:14px">
+      <button onclick="sheetMsgById()"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-5 4v-4.6A2.5 2.5 0 0 1 4 13.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><b>Message by ID</b><span>Chat with one person</span></button>
+      <button onclick="sheetCreateGroup()"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 19c.5-3 2.7-4.6 5.5-4.6s5 1.6 5.5 4.6M15.5 14.8c2.3-.3 4.2.8 5 3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><b>Create group</b><span>Public or private</span></button>
+      <button onclick="sheetJoinGroup()"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><b>Join group</b><span>Public group code</span></button>
+      <button onclick="sheetMyId()"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6" width="17" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 10.5h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><b>My ID code</b><span>Share to be reached</span></button>
+    </div>
+    <div id="inviteBox"></div>
     <div id="convoList"></div>
+    <div class="section-title"><h3>Public groups nearby</h3><span id="discCount">0</span></div>
+    <div id="discList"></div>
   </section>
 
   <!-- CHAT -->
@@ -216,6 +334,8 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
     <div class="chat-head">
       <button class="back" onclick="showView('chats')" aria-label="Back">&#8249;</button>
       <div><h2 id="chatTitle"></h2><small id="chatSub"></small></div>
+      <button class="icon-btn" id="chatCall" style="display:none" onclick="startCall(conv)" aria-label="Call"></button>
+      <button class="icon-btn" id="chatInfo" style="display:none" onclick="sheetGroupInfo(conv.slice(2))" aria-label="Group info"></button>
     </div>
     <div class="msgs" id="msgs"></div>
     <div class="composer">
@@ -228,19 +348,20 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 12 20 4l-4 16-4-6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       </button>
     </div>
-    <p class="note">Files up to 1 MB. Larger transfers are not supported yet.</p>
+    <p class="note">Files up to 1 MB. Messages to a device that is out of reach wait in the queue and are retried while this app is running.</p>
   </section>
 
   <!-- CALLS -->
   <section class="view" id="v-calls">
     <h2>Voice calls</h2>
-    <p class="subtitle">Device-to-device audio</p>
-    <div class="panel">
-      <h4>Not available yet</h4>
-      Offline voice calling is planned for Phase 5 and is not implemented in this build. There are no call controls here on purpose, so nothing pretends to work.
-      <br><br>
-      Reliable calling needs a low-latency audio stream over a direct Wi-Fi or Bluetooth link. Routing live audio through several relay hops adds delay and drops, so long-distance calls over the mesh will stay experimental when they are added.
-    </div>
+    <p class="subtitle">Encrypted device-to-device audio</p>
+    <div class="field"><label>Call by ID code</label>
+      <div class="inline-form"><input id="callById" maxlength="12" placeholder="ABCD-EFGH" autocapitalize="characters"><button class="btn" onclick="callByInput()">Call</button></div></div>
+    <div class="section-title"><h3>Reachable devices</h3><span id="callCount">0</span></div>
+    <div id="callDevs"></div>
+    <div class="section-title"><h3>Recent calls</h3><span></span></div>
+    <div class="calllog" id="callLog"></div>
+    <p class="note">Calls need a live route to the other phone. Over a direct link audio is reliable. Over relay hops it is experimental: expect delay and drops, and every relay phone must have relay mode on. Voice is 8 kHz telephone quality to keep the data rate low.</p>
   </section>
 
   <!-- SETTINGS -->
@@ -248,17 +369,21 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
     <h2>Settings</h2>
     <p class="subtitle">Device, relay, privacy and storage</p>
 
+    <div class="field"><label>My ID code</label>
+      <div class="idcode small" id="sId">--------</div>
+      <div class="btn-row"><button class="btn" onclick="copyId()">Copy</button><button class="btn" onclick="shareId()">Share</button></div></div>
+
     <div class="field"><label>Device name</label>
       <input id="sName" maxlength="24"><div class="btn-row"><button class="btn" onclick="saveName()">Save name</button></div></div>
 
     <div class="toggle"><div><strong>Mesh node active</strong><small>Discover and connect to nearby phones. Runs as a foreground service.</small></div><div class="sw" id="swActive" onclick="toggleActive()"></div></div>
-    <div class="toggle"><div><strong>Relay mode</strong><small>Allow this phone to forward other devices' messages. Relay permission is yours to give or withdraw.</small></div><div class="sw" id="swRelay" onclick="toggleRelay()"></div></div>
+    <div class="toggle"><div><strong>Relay mode</strong><small>Allow this phone to forward other devices' messages and calls. Relay permission is yours to give or withdraw.</small></div><div class="sw" id="swRelay" onclick="toggleRelay()"></div></div>
     <div class="toggle"><div><strong>Remember approved devices</strong><small>Reconnect to devices you already approved without asking again.</small></div><div class="sw" id="swTrust" onclick="toggleTrust()"></div></div>
 
-    <div class="field" style="margin-top:16px"><label>Group passphrase</label>
-      <input id="sPass" type="password" placeholder="Shared by everyone in the group chat">
+    <div class="field" style="margin-top:16px"><label>Open channel passphrase</label>
+      <input id="sPass" type="password" placeholder="Shared by everyone using the open channel">
       <div class="btn-row"><button class="btn" onclick="savePass()">Set passphrase</button></div></div>
-    <p class="note" style="margin-top:0">Group (everyone) messages are encrypted with this passphrase. Devices with a different passphrase cannot read them. Default is a public value, so set your own.</p>
+    <p class="note" style="margin-top:0">The open channel (Everyone) is encrypted with this passphrase. Devices with a different passphrase cannot read it. Default is a public value, so set your own. Private chats and private groups do not use it.</p>
 
     <div class="section-title"><h3>Blocked devices</h3><span id="blkCount">0</span></div>
     <div id="blkList"></div>
@@ -284,18 +409,56 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
   <button class="nav" data-v="calls" onclick="showView('calls')"><svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h3l1.5 4-2 1.5a15 15 0 0 0 5.5 5.5l1.5-2 4 1.5v3A2 2 0 0 1 18.5 19C10.5 19 5 13.5 5 5.5A2 2 0 0 1 7 3.5Z" stroke="currentColor" stroke-width="1.5"/></svg>Calls</button>
   <button class="nav" data-v="set" onclick="showView('set')"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Settings</button>
 </nav>
+
+<div class="sheet-bg" id="sheetBg" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet"></div>
+
+<div class="callscr" id="callScr">
+  <div class="call-top" id="cTop"></div>
+  <div class="call-center">
+    <div class="avatar"><i class="ring"></i><i class="ring r2"></i><svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg></div>
+    <h2 id="cName"></h2>
+    <p id="cSub"></p>
+    <div class="qbars" id="cBars" style="display:none"><i></i><i></i><i></i></div>
+    <div class="qtext" id="cQtext"></div>
+  </div>
+  <div class="call-actions" id="cActions"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-var S=null,view='net',conv=null,unread={},files={};
+var S=null,view='net',conv=null,unread={},files={},permOk=false,permAsked=false,obStep=0;
 var chats=load('nx_chats',{});
+var contacts=load('nx_contacts',{});
+var calllog=load('nx_calllog',[]);
+var callUI=null,callTimer=null,hideTimer=null;
 function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
-function save(){try{localStorage.setItem('nx_chats',JSON.stringify(chats))}catch(e){}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function save(){store('nx_chats',chats)}
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(window.tt);window.tt=setTimeout(function(){t.classList.remove('show')},3200)}
 function hhmm(ts){var d=new Date(ts);return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
 function bridge(){return window.NexusBridge}
+function fmtId(id){return String(id).toUpperCase().replace(/(.{4})(?=.)/g,'$1-')}
+function normId(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,'')}
+function validId(s){return /^[abcdefghjkmnpqrstuvwxyz23456789]{8}$/.test(s)}
+function isGroup(c){return String(c).indexOf('g:')===0}
+function nodeById(id){if(!S)return null;for(var i=0;i<S.nodes.length;i++)if(S.nodes[i].id===id)return S.nodes[i];return null}
+function reachable(id){var n=nodeById(id);return !!(n&&n.hops>0)}
+function groupById(gid){if(!S)return null;for(var i=0;i<S.groups.length;i++)if(S.groups[i].gid===gid)return S.groups[i];return null}
+
+var ICO={
+ phone:'<svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h3l1.5 4-2 1.5a15 15 0 0 0 5.5 5.5l1.5-2 4 1.5v3A2 2 0 0 1 18.5 19C10.5 19 5 13.5 5 5.5A2 2 0 0 1 7 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+ end:'<svg viewBox="0 0 24 24" fill="none" style="transform:rotate(135deg)"><path d="M7 3.5h3l1.5 4-2 1.5a15 15 0 0 0 5.5 5.5l1.5-2 4 1.5v3A2 2 0 0 1 18.5 19C10.5 19 5 13.5 5 5.5A2 2 0 0 1 7 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+ spk:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+ info:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5M12 8v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+ dev:'<svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg>',
+ grp:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 19c.5-3 2.7-4.6 5.5-4.6s5 1.6 5.5 4.6M15.5 14.8c2.3-.3 4.2.8 5 3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" stroke="currentColor" stroke-width="1.5"/></svg>'
+};
 
 /* ---------- navigation ---------- */
 function showView(v){
@@ -305,27 +468,109 @@ function showView(v){
   document.querySelectorAll('.nav').forEach(function(n){n.classList.toggle('active',n.dataset.v===tab)});
   if(v==='chats')renderConvos();
   if(v==='chat')renderChat();
+  if(v==='calls')renderCalls();
   window.scrollTo(0,0);
 }
-window.nexusBack=function(){if(view==='chat'){showView('chats');return true}if(view!=='net'){showView('net');return true}return false};
-window.nexusPerm=function(ok){$('permBanner').style.display=ok?'none':'block'};
+window.nexusBack=function(){
+  if($('sheet').classList.contains('on')){closeSheet();return true}
+  if(callUI)return true;
+  if($('onb').classList.contains('on'))return obStep>1?(obGo(obStep-1),true):true;
+  if(view==='chat'){showView('chats');return true}
+  if(view!=='net'){showView('net');return true}
+  return false};
+window.nexusPerm=function(ok){
+  permOk=ok;
+  $('permBanner').style.display=(ok||$('onb').classList.contains('on'))?'none':'block';
+  if($('onb').classList.contains('on')&&obStep===2){
+    if(ok)obGo(3);else if(permAsked){$('obPermMsg').textContent='Permissions are needed for NEXUS to work. Tap the button to try again, or allow them in Android Settings > Apps > NEXUS Offline > Permissions.';$('obPermMsg').style.color='#ff9aa2'}
+  }
+};
+
+/* ---------- sheets ---------- */
+function openSheet(html){$('sheet').innerHTML=html;$('sheet').classList.add('on');$('sheetBg').classList.add('on')}
+function closeSheet(){$('sheet').classList.remove('on');$('sheetBg').classList.remove('on')}
+function sheetMyId(){
+  if(!S)return;
+  openSheet('<h3>My ID code</h3><p class="hint">Anyone with this code can message or call you when your phones can reach each other through the mesh.</p><div class="idcode">'+esc(fmtId(S.me.id))+'</div><div class="btn-row"><button class="btn" onclick="copyId()">Copy</button><button class="btn" onclick="shareId()">Share</button><button class="btn ghost" onclick="closeSheet()">Close</button></div>');
+}
+function copyId(){if(!S)return;bridge().copyText(fmtId(S.me.id));toast('ID code copied')}
+function shareId(){if(!S)return;bridge().shareText('My NEXUS Offline ID code: '+fmtId(S.me.id))}
+function sheetMsgById(){
+  openSheet('<h3>Message by ID</h3><p class="hint">Enter the ID code of the person you want to message. If their phone is out of reach right now, your message waits in the queue.</p>'+
+  '<div class="field"><label>ID code</label><input id="shId" maxlength="12" placeholder="ABCD-EFGH" autocapitalize="characters"></div>'+
+  '<div class="field"><label>Name (optional)</label><input id="shNm" maxlength="24" placeholder="Save as"></div>'+
+  '<div class="btn-row"><button class="btn" onclick="doMsgById()">Open chat</button><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
+}
+function doMsgById(){
+  var id=normId($('shId').value),nm=$('shNm').value.trim();
+  if(!validId(id)){toast('That ID code is not valid');return}
+  if(S&&id===S.me.id){toast('That is your own ID code');return}
+  if(nm||!contacts[id])contacts[id]=nm||contacts[id]||'';
+  store('nx_contacts',contacts);closeSheet();openChat(id);
+}
+function sheetCreateGroup(){
+  openSheet('<h3>Create group</h3><p class="hint">Choose who can join.</p>'+
+  '<div class="field"><label>Group name</label><input id="shGn" maxlength="30" placeholder="Group name"></div>'+
+  '<div class="seg" id="shSeg"><button class="on" data-t="public" onclick="pickType(this)"><b>Public</b><span>Anyone nearby can find the group and join it.</span></button><button data-t="private" onclick="pickType(this)"><b>Private</b><span>Only people you invite by ID code can join.</span></button></div>'+
+  '<div class="btn-row"><button class="btn" onclick="doCreateGroup()">Create</button><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
+}
+function pickType(el){document.querySelectorAll('#shSeg button').forEach(function(b){b.classList.remove('on')});el.classList.add('on')}
+function doCreateGroup(){
+  var nm=$('shGn').value.trim(),t=document.querySelector('#shSeg button.on').dataset.t;
+  if(!nm){toast('Enter a group name');return}
+  var gid=bridge().newGid();
+  bridge().createGroup(gid,nm,t);
+  closeSheet();showView('chats');
+  setTimeout(function(){openChat('g:'+gid)},250);
+}
+function sheetJoinGroup(){
+  openSheet('<h3>Join public group</h3><p class="hint">Enter the group code. The group must be reachable from your phone right now. Private groups need an invitation instead.</p>'+
+  '<div class="field"><label>Group code</label><input id="shGc" maxlength="12" placeholder="ABCD-EFGH" autocapitalize="characters"></div>'+
+  '<div class="btn-row"><button class="btn" onclick="doJoin()">Join</button><button class="btn ghost" onclick="closeSheet()">Cancel</button></div>');
+}
+function doJoin(){var c=normId($('shGc').value);if(!validId(c)){toast('That group code is not valid');return}bridge().joinGroup(c);closeSheet();setTimeout(function(){if(groupById(c))openChat('g:'+c)},400)}
+function joinDisc(gid){bridge().joinGroup(gid);setTimeout(function(){if(groupById(gid))openChat('g:'+gid)},400)}
+function sheetGroupInfo(gid){
+  var g=groupById(gid);if(!g)return;
+  var h='<h3>'+esc(g.name)+'</h3><p class="hint">'+(g.type==='private'?'Private group. Only invited people can join and read it.':'Public group. Anyone nearby can find it and join, so do not share secrets here.')+'</p>'+
+  '<div class="info-list" style="margin-bottom:12px"><div class="info-row"><span>Group code</span><b>'+esc(fmtId(gid))+'</b></div><div class="info-row"><span>Owner</span><b>'+(g.mine?'You':esc(g.owner?nameFor(g.owner):'-'))+'</b></div></div>';
+  if(g.type==='private'&&g.mine)h+='<div class="field"><label>Invite by ID code</label><div class="inline-form"><input id="shInv" maxlength="12" placeholder="ABCD-EFGH" autocapitalize="characters"><button class="btn" onclick="doInvite(\''+gid+'\')">Invite</button></div></div>';
+  h+='<div class="btn-row"><button class="btn" onclick="bridge().copyText(\''+fmtId(gid)+'\');toast(\'Group code copied\')">Copy code</button><button class="btn danger" onclick="doLeave(\''+gid+'\')">Leave group</button><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+  openSheet(h);
+}
+function doInvite(gid){var id=normId($('shInv').value);if(!validId(id)){toast('That ID code is not valid');return}bridge().invite(gid,id);if(!contacts[id]){contacts[id]='';store('nx_contacts',contacts)}$('shInv').value='';toast('Invitation sent. It is delivered when that device is reachable.')}
+function doLeave(gid){if(!confirm('Leave this group?'))return;bridge().leaveGroup(gid);delete chats['g:'+gid];save();closeSheet();showView('chats')}
 
 /* ---------- events from Android ---------- */
 window.nexusEvent=function(str){
   var e;try{e=JSON.parse(str)}catch(x){return}
   if(e.t==='state'){S=e.s;renderAll()}
-  else if(e.t==='msg'){var c=e.dst==='*'?'*':e.from;addMsg(c,{id:e.id,out:false,text:e.text,ts:e.ts,who:e.fromName});if(!(view==='chat'&&conv===c)){unread[c]=(unread[c]||0)+1;updateBadge()}else renderChat()}
-  else if(e.t==='file'){var c2=e.dst==='*'?'*':e.from;files[e.id]={mime:e.mime,data:e.data,name:e.name};addMsg(c2,{id:e.id,out:false,file:{name:e.name,mime:e.mime,size:e.size},ts:e.ts,who:e.fromName});if(!(view==='chat'&&conv===c2)){unread[c2]=(unread[c2]||0)+1;updateBadge()}else renderChat()}
+  else if(e.t==='msg'){var c=convOf(e);if(c.charAt(0)!=='g'&&c!=='*'&&contacts[c]===undefined){contacts[c]=e.fromName||'';store('nx_contacts',contacts)}addMsg(c,{id:e.id,out:false,text:e.text,ts:e.ts,who:e.fromName});incoming(c)}
+  else if(e.t==='file'){var c2=convOf(e);files[e.id]={mime:e.mime,data:e.data,name:e.name};addMsg(c2,{id:e.id,out:false,file:{name:e.name,mime:e.mime,size:e.size},ts:e.ts,who:e.fromName});incoming(c2)}
   else if(e.t==='status'){setStatus(e.id,e.st)}
   else if(e.t==='lost'){toast('Connection lost')}
+  else if(e.t==='invite'){toast('Group invitation from '+e.fromName)}
+  else if(e.t==='call'){onCall(e)}
+  else if(e.t==='callq'){onCallQ(e)}
   else if(e.t==='error'){toast(e.m)}
 };
+function convOf(e){return e.dst==='*'?'*':(e.dst==='me'?e.from:e.dst)}
+function incoming(c){if(!(view==='chat'&&conv===c)){unread[c]=(unread[c]||0)+1;updateBadge();if(view==='chats')renderConvos()}else renderChat()}
 function addMsg(c,m){chats[c]=chats[c]||[];chats[c].push(m);if(chats[c].length>300)chats[c].shift();save()}
 function setStatus(id,st){
-  for(var c in chats){chats[c].forEach(function(m){if(m.id===id){var rank={sending:0,queued:1,sent:2,delivered:3,failed:3};if(m.st==='delivered'&&st!=='failed')return;m.st=st}})}
+  for(var c in chats){chats[c].forEach(function(m){if(m.id===id){if(m.st==='delivered'&&st!=='failed')return;m.st=st}})}
   save();if(view==='chat')renderChat();if(view==='chats')renderConvos();
 }
 function updateBadge(){var n=0;for(var k in unread)n+=unread[k];var b=$('chatBadge');b.textContent=n;b.style.display=n?'grid':'none'}
+
+/* ---------- names ---------- */
+function nameFor(c){
+  if(c==='*')return 'Open channel (everyone)';
+  if(isGroup(c)){var g=groupById(c.slice(2));return g?g.name:'Group '+fmtId(c.slice(2))}
+  if(contacts[c])return contacts[c];
+  var n=nodeById(c);if(n&&n.name)return n.name;
+  return fmtId(c);
+}
 
 /* ---------- rendering ---------- */
 function renderAll(){
@@ -338,7 +583,8 @@ function renderAll(){
   $('mNodes').textContent=S.nodes.filter(function(n){return n.hops>0}).length;
   $('mDirect').textContent=S.links.length;
   $('mHops').textContent=maxh;
-  $('iName').textContent=S.me.name;$('iId').textContent=S.me.id;$('iFp').textContent=S.me.fp;
+  $('iName').textContent=S.me.name;$('iId').textContent=fmtId(S.me.id);$('iFp').textContent=S.me.fp;
+  $('sId').textContent=fmtId(S.me.id);$('obId').textContent=fmtId(S.me.id);
   $('iBt').innerHTML=S.bt?'<span class="ok">On</span>':'<span class="bad">Off</span>';
   $('iWifi').innerHTML=S.wifi?'<span class="ok">On</span>':'<span class="bad">Off</span>';
   $('iRelay').textContent=S.relay?'Allowed':'Off';
@@ -348,9 +594,12 @@ function renderAll(){
   $('swRelay').classList.toggle('on',S.relay);
   $('swTrust').classList.toggle('on',S.autoTrust);
   if(document.activeElement!==$('sName'))$('sName').value=S.me.name;
+  if(obStep===1&&!$('obName').value&&document.activeElement!==$('obName'))$('obName').value=S.me.name;
   drawTopo();renderPending();renderDevices();renderBlocked();
   if(view==='chats')renderConvos();
   if(view==='chat')renderChatHeader();
+  if(view==='calls')renderCalls();
+  if(S.call!=='idle'&&!callUI){callUI={st:S.call,peer:S.callPeer,name:nameFor(S.callPeer),dir:S.call==='in'?'in':'out',hops:0,t0:S.call==='active'?Date.now():0,muted:false,spk:false,loss:0};showCall()}
 }
 
 function drawTopo(){
@@ -367,7 +616,7 @@ function drawTopo(){
     h+='<line class="edge'+(isD?' direct':'')+'" x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/>'});
   if(S.active)h+='<circle class="pulse-ring" cx="'+cx+'" cy="'+cy+'" r="20"/>';
   S.nodes.forEach(function(n){var p=pos[n.id];if(!p)return;
-    h+='<g class="nodeg" style="transform-origin:'+p[0]+'px '+p[1]+'px"><rect x="'+(p[0]-15)+'" y="'+(p[1]-15)+'" width="30" height="30" rx="9" fill="#14293b" stroke="'+(n.relay?'#47718a':'#8a6a47')+'"/><rect x="'+(p[0]-5)+'" y="'+(p[1]-8)+'" width="10" height="16" rx="2" fill="none" stroke="#a8dfff"/><text x="'+p[0]+'" y="'+(p[1]+27)+'">'+esc(n.name.slice(0,12))+'</text></g>'});
+    h+='<g class="nodeg" style="transform-origin:'+p[0]+'px '+p[1]+'px"><rect x="'+(p[0]-15)+'" y="'+(p[1]-15)+'" width="30" height="30" rx="9" fill="#14293b" stroke="'+(n.relay?'#47718a':'#8a6a47')+'"/><rect x="'+(p[0]-5)+'" y="'+(p[1]-8)+'" width="10" height="16" rx="2" fill="none" stroke="#a8dfff"/><text x="'+p[0]+'" y="'+(p[1]+27)+'">'+esc(nameFor(n.id).slice(0,12))+'</text></g>'});
   h+='<g><rect x="'+(cx-17)+'" y="'+(cy-17)+'" width="34" height="34" rx="10" fill="#17475a" stroke="#64c8e4"/><rect x="'+(cx-5.5)+'" y="'+(cy-9)+'" width="11" height="18" rx="2" fill="none" stroke="#9be8e3"/><text x="'+cx+'" y="'+(cy+31)+'" style="font-size:9px;fill:#9be8e3;text-anchor:middle">YOU</text></g>';
   if(S.nodes.length===0)h+='<text x="210" y="172" style="font-size:10px;fill:#71839a;text-anchor:middle">'+(S.active?'Searching for nearby devices':'Mesh node is off')+'</text>';
   svg.innerHTML=h;
@@ -387,53 +636,73 @@ function renderDevices(){
   if(!list.length){$('devList').innerHTML='<div class="empty">'+(S.active?'No devices connected yet. Open NEXUS Offline on another phone nearby and approve the connection request.':'Turn the mesh node on in Settings to find nearby devices.')+'</div>';return}
   $('devList').innerHTML=list.map(function(n){
     var lbl=n.hops===1?'Direct link':n.hops+' hops away';
-    return '<div class="device" style="flex-wrap:wrap"><div class="device-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg></div>'+
-    '<div class="device-info"><strong>'+esc(n.name)+'</strong><small>'+lbl+(n.relay?' / relay':' / no relay')+'</small><small>'+esc(n.fp||'key pending')+'</small></div>'+
+    return '<div class="device" style="flex-wrap:wrap"><div class="device-icon">'+ICO.dev+'</div>'+
+    '<div class="device-info"><strong>'+esc(nameFor(n.id))+'</strong><small>'+lbl+(n.relay?' / relay':' / no relay')+'</small><small>ID '+esc(fmtId(n.id))+'</small></div>'+
     '<span class="'+(n.verified?'chip good':'chip')+'">'+(n.verified?'VERIFIED':'UNVERIFIED')+'</span>'+
     '<div class="row-actions" style="width:100%"><button class="btn" onclick="openChat(\''+n.id+'\')">Message</button>'+
+    '<button class="btn" onclick="startCall(\''+n.id+'\')">Call</button>'+
     '<button class="btn ghost" onclick="NexusBridge.verify(\''+n.id+'\','+(!n.verified)+')">'+(n.verified?'Unverify':'Mark verified')+'</button>'+
     '<button class="btn danger" onclick="if(confirm(\'Block this device?\'))NexusBridge.block(\''+n.id+'\')">Block</button></div></div>'}).join('');
 }
 
 function renderBlocked(){
   $('blkCount').textContent=S.blocked.length;
-  $('blkList').innerHTML=S.blocked.length?S.blocked.map(function(id){return '<div class="info-row"><b>'+esc(id)+'</b><button class="btn" onclick="NexusBridge.unblock(\''+id+'\')">Unblock</button></div>'}).join(''):'<div class="empty">No blocked devices.</div>';
+  $('blkList').innerHTML=S.blocked.length?S.blocked.map(function(id){return '<div class="info-row"><b>'+esc(fmtId(id))+'</b><button class="btn" onclick="NexusBridge.unblock(\''+id+'\')">Unblock</button></div>'}).join(''):'<div class="empty">No blocked devices.</div>';
 }
 
-function nameFor(id){if(id==='*')return 'Everyone (group)';if(!S)return id;for(var i=0;i<S.nodes.length;i++)if(S.nodes[i].id===id)return S.nodes[i].name;return id}
 function lastOf(c){var a=chats[c];if(!a||!a.length)return null;return a[a.length-1]}
+function convoRow(c,icon,title,sub,chip){
+  var u=unread[c]||0;
+  return '<div class="convo" onclick="openChat(\''+c+'\')"><div class="device-icon">'+icon+'</div><div class="device-info"><strong>'+esc(title)+'</strong><div class="last">'+esc(sub)+'</div></div>'+(chip?'<span class="chip'+(chip==='ONLINE'?' good':'')+'">'+chip+'</span>':'')+(u?'<span class="unread">'+u+'</span>':'')+'</div>';
+}
+function prevOf(c,fallback){var l=lastOf(c);return l?(l.file?('File: '+l.file.name):l.text):fallback}
 
 function renderConvos(){
-  var ids=['*'];var seen={'*':1};
-  if(S)S.nodes.forEach(function(n){if(n.hops>0){ids.push(n.id);seen[n.id]=1}});
-  Object.keys(chats).forEach(function(k){if(!seen[k])ids.push(k)});
-  $('convoList').innerHTML=ids.map(function(c){
-    var l=lastOf(c),u=unread[c]||0;
-    var prev=l?(l.file?('File: '+l.file.name):l.text):'No messages yet';
-    return '<div class="convo" onclick="openChat(\''+c+'\')"><div class="device-icon">'+(c==='*'?'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 19c.5-3 2.7-4.6 5.5-4.6s5 1.6 5.5 4.6M15.5 14.8c2.3-.3 4.2.8 5 3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>':'<svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg>')+'</div>'+
-    '<div class="device-info"><strong>'+esc(nameFor(c))+'</strong><div class="last">'+esc(prev)+'</div></div>'+(u?'<span class="unread">'+u+'</span>':'')+'</div>'}).join('');
+  if(!S)return;
+  var ib='';
+  S.invites.forEach(function(v){
+    ib+='<div class="pending"><b>'+esc(v.fromName)+'</b> invited you to the private group <b>'+esc(v.name)+'</b>'+
+    '<div class="btn-row"><button class="btn" onclick="acceptInv(\''+v.gid+'\')">Join</button><button class="btn danger" onclick="NexusBridge.declineInvite(\''+v.gid+'\')">Decline</button></div></div>'});
+  $('inviteBox').innerHTML=ib;
+  var h=convoRow('*',ICO.grp,'Open channel (everyone)',prevOf('*','Visible to all nearby devices using the same passphrase'),'');
+  S.groups.forEach(function(g){h+=convoRow('g:'+g.gid,ICO.grp,g.name,prevOf('g:'+g.gid,g.type==='private'?'Private group':'Public group'),g.type==='private'?'PRIVATE':'PUBLIC')});
+  var ids={};
+  Object.keys(contacts).forEach(function(k){ids[k]=1});
+  Object.keys(chats).forEach(function(k){if(k!=='*'&&!isGroup(k))ids[k]=1});
+  S.nodes.forEach(function(n){if(n.hops>0)ids[n.id]=1});
+  Object.keys(ids).forEach(function(id){
+    h+=convoRow(id,ICO.dev,nameFor(id),prevOf(id,'ID '+fmtId(id)),reachable(id)?'ONLINE':'OFFLINE')});
+  $('convoList').innerHTML=h;
+  $('discCount').textContent=S.discGroups.length;
+  $('discList').innerHTML=S.discGroups.length?S.discGroups.map(function(g){
+    return '<div class="convo" style="cursor:default"><div class="device-icon">'+ICO.grp+'</div><div class="device-info"><strong>'+esc(g.name)+'</strong><div class="last">Code '+esc(fmtId(g.gid))+' / via '+esc(g.via)+'</div></div><button class="btn" onclick="joinDisc(\''+g.gid+'\')">Join</button></div>'}).join(''):'<div class="empty">No public groups found nearby.</div>';
 }
+function acceptInv(gid){bridge().acceptInvite(gid);setTimeout(function(){openChat('g:'+gid)},250)}
 
 function openChat(c){conv=c;unread[c]=0;updateBadge();showView('chat')}
 function renderChatHeader(){
   $('chatTitle').textContent=nameFor(conv);
   var sub='';
   if(conv==='*')sub='Broadcast to all reachable devices';
-  else if(S){var n=S.nodes.filter(function(x){return x.id===conv})[0];sub=n&&n.hops>0?(n.hops===1?'Direct link':n.hops+' hops away'):'Not reachable - messages will be queued'}
+  else if(isGroup(conv)){var g=groupById(conv.slice(2));sub=g?((g.type==='private'?'Private group':'Public group')+' / code '+fmtId(g.gid)):'You are not in this group'}
+  else sub=reachable(conv)?(nodeById(conv).hops===1?'Online / direct link':'Online / '+nodeById(conv).hops+' hops away'):'Not reachable - messages will be queued';
   $('chatSub').textContent=sub;
+  var direct=conv&&conv!=='*'&&!isGroup(conv);
+  $('chatCall').style.display=direct?'grid':'none';$('chatCall').innerHTML=ICO.phone;
+  $('chatInfo').style.display=isGroup(conv)?'grid':'none';$('chatInfo').innerHTML=ICO.info;
 }
 function stLabel(m){if(!m.out)return '';return {sending:'Sending',queued:'Queued',sent:'Sent',delivered:'Delivered',failed:'Failed'}[m.st||'sending']}
 function renderChat(){
   renderChatHeader();
   var a=chats[conv]||[];
-  $('msgs').innerHTML=a.length?a.map(function(m,i){
+  $('msgs').innerHTML=a.length?a.map(function(m){
     var body='';
     if(m.file){
       var f=files[m.id];
       if(m.file.mime&&m.file.mime.indexOf('image/')===0&&f)body='<img src="data:'+f.mime+';base64,'+f.data+'" alt="">';
       else body='<b>'+esc(m.file.name)+'</b> <small>('+Math.round(m.file.size/1024)+' KB)</small>'+(!m.out&&f?'<div class="btn-row"><button class="btn" onclick="saveF(\''+m.id+'\')">Save</button></div>':'');
     } else body=esc(m.text);
-    return '<div class="bubble '+(m.out?'out':'in')+'">'+(!m.out&&conv==='*'&&m.who?'<div class="who">'+esc(m.who)+'</div>':'')+body+'<div class="meta"><span>'+hhmm(m.ts)+'</span><span>'+stLabel(m)+'</span></div></div>'}).join(''):'<div class="empty">No messages yet.</div>';
+    return '<div class="bubble '+(m.out?'out':'in')+'">'+(!m.out&&conv!==undefined&&(conv==='*'||isGroup(conv))&&m.who?'<div class="who">'+esc(m.who)+'</div>':'')+body+'<div class="meta"><span>'+hhmm(m.ts)+'</span><span>'+stLabel(m)+'</span></div></div>'}).join(''):'<div class="empty">No messages yet.</div>';
   var box=$('msgs');box.scrollTop=box.scrollHeight;
 }
 function saveF(id){var f=files[id];if(!f)return;var p=bridge().saveFile(f.name,f.data);toast(p?('Saved: '+p):'Could not save file')}
@@ -468,6 +737,93 @@ function saveName(){var v=$('sName').value.trim();if(!v){toast('Enter a name');r
 function savePass(){var v=$('sPass').value;if(v.length<4){toast('Use at least 4 characters');return}bridge().setPass(v);$('sPass').value='';toast('Passphrase updated')}
 function clearTrusted(){if(confirm('Forget all approved devices? You will be asked again on next connection.')){bridge().clearTrusted();toast('Approved devices cleared')}}
 function clearChats(){if(confirm('Delete all chat history on this phone?')){chats={};save();unread={};updateBadge();if(view==='chats')renderConvos();toast('Chat history cleared')}}
+
+/* ---------- calls ---------- */
+function startCall(id){if(callUI){toast('You are already in a call');return}bridge().callStart(id)}
+function callByInput(){var id=normId($('callById').value);if(!validId(id)){toast('That ID code is not valid');return}startCall(id)}
+function renderCalls(){
+  if(!S)return;
+  var ids={};
+  S.nodes.forEach(function(n){if(n.hops>0)ids[n.id]=1});
+  Object.keys(contacts).forEach(function(k){ids[k]=1});
+  var keys=Object.keys(ids);
+  var on=keys.filter(reachable).length;
+  $('callCount').textContent=on;
+  $('callDevs').innerHTML=keys.length?keys.map(function(id){
+    var n=nodeById(id),ok=reachable(id);
+    return '<div class="device" style="margin-bottom:9px"><div class="device-icon">'+ICO.dev+'</div><div class="device-info"><strong>'+esc(nameFor(id))+'</strong><small>'+(ok?(n.hops===1?'Direct link':n.hops+' hops (experimental)'):'Not reachable')+'</small></div><button class="btn" '+(ok?'':'disabled')+' onclick="startCall(\''+id+'\')">Call</button></div>'}).join(''):'<div class="empty">No devices yet. Connect to a nearby phone first, or call by ID code above.</div>';
+  var lg=calllog.slice().reverse().slice(0,15);
+  $('callLog').innerHTML=lg.length?lg.map(function(r){
+    return '<div class="logrow"><div><b>'+esc(r.name||fmtId(r.peer))+'</b><small>'+(r.dir==='in'?'Incoming':'Outgoing')+' / '+reasonText(r.res)+(r.dur?' / '+fmtDur(r.dur):'')+'</small></div><small>'+hhmm(r.ts)+'</small></div>'}).join(''):'<div class="empty">No calls yet.</div>';
+}
+function reasonText(r){return {ended:'Ended',declined:'Declined',noanswer:'No answer',missed:'Missed',busy:'Busy',lost:'Connection lost',error:'Failed'}[r]||'Ended'}
+function fmtDur(s){s=Math.max(0,Math.floor(s));return ('0'+Math.floor(s/60)).slice(-2)+':'+('0'+(s%60)).slice(-2)}
+
+function onCall(e){
+  if(e.st==='out'||e.st==='in'){
+    clearTimeout(hideTimer);
+    callUI={st:e.st,peer:e.peer,name:contacts[e.peer]||e.name||fmtId(e.peer),dir:e.st==='in'?'in':'out',hops:e.hops,t0:0,muted:false,spk:false,loss:0};
+    showCall();
+  } else if(e.st==='active'&&callUI){
+    callUI.st='active';callUI.t0=Date.now();callUI.hops=e.hops;callUI.muted=false;callUI.spk=false;
+    bridge().callMute(false);bridge().callSpeaker(false);
+    clearInterval(callTimer);callTimer=setInterval(tickCall,1000);
+    showCall();
+  } else if(e.st==='ended'){
+    if(!callUI)return;
+    clearInterval(callTimer);
+    calllog.push({peer:callUI.peer,name:callUI.name,dir:callUI.dir,ts:Date.now(),dur:e.dur||0,res:e.reason||'ended'});
+    if(calllog.length>60)calllog.shift();store('nx_calllog',calllog);
+    callUI.st='ended';callUI.reason=e.reason;showCall();
+    hideTimer=setTimeout(function(){callUI=null;showCall();if(view==='calls')renderCalls()},1800);
+  }
+}
+function onCallQ(e){if(!callUI||callUI.st!=='active')return;callUI.loss=e.loss;callUI.hops=e.hops;paintQuality()}
+function tickCall(){if(callUI&&callUI.st==='active')$('cSub').textContent=fmtDur((Date.now()-callUI.t0)/1000)}
+function paintQuality(){
+  if(!callUI)return;
+  var q=callUI.loss<8?3:(callUI.loss<25?2:1);
+  $('cBars').className='qbars q'+q;
+  var hop=callUI.hops>1?('Relayed over '+callUI.hops+' hops (experimental)'):'Direct link';
+  $('cQtext').textContent=({3:'Good',2:'Fair',1:'Poor'})[q]+' connection / '+hop;
+}
+function cbtn(cls,icon,label,fn,on){return '<div class="cbtn-wrap"><button class="cbtn '+cls+(on?' on':'')+'" onclick="'+fn+'">'+icon+'</button>'+label+'</div>'}
+function showCall(){
+  var el=$('callScr');
+  if(!callUI){el.className='callscr';return}
+  var c=callUI,ringing=(c.st==='out'||c.st==='in');
+  el.className='callscr on'+(ringing?' ringing':'');
+  $('cName').textContent=c.name;
+  $('cTop').textContent=c.st==='in'?'Incoming call':(c.st==='out'?'Outgoing call':(c.st==='active'?'Voice call':'Call'));
+  $('cBars').style.display=c.st==='active'?'flex':'none';
+  $('cQtext').textContent='';
+  if(c.st==='out')$('cSub').textContent='Calling...';
+  else if(c.st==='in')$('cSub').textContent='NEXUS voice call'+(c.hops>1?' / '+c.hops+' hops':'');
+  else if(c.st==='active'){tickCall();paintQuality()}
+  else $('cSub').textContent=reasonText(c.reason);
+  var a='';
+  if(c.st==='out')a=cbtn('end',ICO.end,'End','NexusBridge.callEnd()');
+  else if(c.st==='in')a=cbtn('rej',ICO.end,'Decline','NexusBridge.callReject()')+cbtn('acc',ICO.phone,'Accept','NexusBridge.callAccept()');
+  else if(c.st==='active')a=cbtn('',ICO.mic,c.muted?'Muted':'Mute','toggleMute()',c.muted)+cbtn('',ICO.spk,'Speaker','toggleSpk()',c.spk)+cbtn('end',ICO.end,'End','NexusBridge.callEnd()');
+  $('cActions').innerHTML=a;
+}
+function toggleMute(){if(!callUI)return;callUI.muted=!callUI.muted;bridge().callMute(callUI.muted);showCall()}
+function toggleSpk(){if(!callUI)return;callUI.spk=!callUI.spk;bridge().callSpeaker(callUI.spk);showCall()}
+
+/* ---------- onboarding ---------- */
+function obGo(n){
+  obStep=n;
+  for(var i=1;i<=3;i++){$('ob'+i).classList.toggle('on',i===n);$('od'+i).classList.toggle('on',i<=n)}
+  if(n===2){
+    if(permOk){$('obPermMsg').textContent='Permissions are already allowed.';$('obPermMsg').style.color='#65d6a5';$('obPermBtn').textContent='Continue'}
+  }
+  if(n===3&&S)$('obId').textContent=fmtId(S.me.id);
+}
+function obStep1(){var v=$('obName').value.trim();if(v)bridge().setName(v);obGo(2)}
+function obStep2(){if(permOk){obGo(3);return}permAsked=true;bridge().requestPermissions()}
+function obFinish(){try{localStorage.setItem('nx_onb','1')}catch(e){}$('onb').classList.remove('on');obStep=0;nexusPerm(permOk);if(bridge())bridge().rescan()}
+var onboarded=false;try{onboarded=localStorage.getItem('nx_onb')==='1'}catch(e){}
+if(!onboarded){$('onb').classList.add('on');obGo(1)}
 
 /* ---------- start ---------- */
 if(window.NexusBridge){NexusBridge.ready()}

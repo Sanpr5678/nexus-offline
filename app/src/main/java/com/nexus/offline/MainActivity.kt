@@ -2,6 +2,9 @@ package com.nexus.offline
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -29,11 +32,28 @@ class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
     private var chooserCb: ValueCallback<Array<Uri>>? = null
     private var waitingForSettings = false
+    private var pendingMic: (() -> Unit)? = null
     private val engine get() = NexusApp.engine
 
     private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         chooserCb?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(r.resultCode, r.data))
         chooserCb = null
+    }
+
+    private val micLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        val p = pendingMic
+        pendingMic = null
+        if (ok) p?.invoke()
+        else pushEvent(JSONObject().put("t", "error").put("m", "Microphone permission is needed for voice calls."))
+    }
+
+    private fun withMic(block: () -> Unit) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            block()
+        } else {
+            pendingMic = block
+            micLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     // Keep the permission result handling in one place. A denied permission must never
@@ -87,11 +107,22 @@ class MainActivity : AppCompatActivity() {
         val missing = requiredPerms().filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (missing.isEmpty()) {
+        // Optional extras: microphone (voice calls) and notifications (call alerts). Not needed for the mesh itself.
+        val extras = mutableListOf<String>()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            extras += Manifest.permission.RECORD_AUDIO
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            extras += Manifest.permission.POST_NOTIFICATIONS
+        }
+        val all = missing + extras
+        if (all.isEmpty()) {
             onPermsChanged()
             return
         }
-        permLauncher.launch(missing.toTypedArray())
+        permLauncher.launch(all.toTypedArray())
     }
 
     private fun showPermissionHelp(missing: List<String>) {
@@ -218,7 +249,7 @@ class MainActivity : AppCompatActivity() {
             engine.attach { e -> pushEvent(e) }
             val ok = hasPerms()
             js("window.nexusPerm&&window.nexusPerm($ok)")
-            if (ok) startMesh() else requestPerms()
+            if (ok) startMesh()
             engine.emitState()
         }
 
@@ -258,6 +289,36 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface fun verify(id: String, ok: Boolean) = runOnUiThread { engine.setVerified(id, ok) }
         @JavascriptInterface fun clearTrusted() = runOnUiThread { engine.clearTrusted() }
         @JavascriptInterface fun rescan() = runOnUiThread { engine.rescan() }
+
+        // ---- groups ----
+        @JavascriptInterface fun newGid(): String = engine.newGid()
+        @JavascriptInterface fun createGroup(gid: String, name: String, type: String) = runOnUiThread { engine.createGroup(gid, name, type) }
+        @JavascriptInterface fun joinGroup(code: String) = runOnUiThread { engine.joinGroup(code) }
+        @JavascriptInterface fun leaveGroup(gid: String) = runOnUiThread { engine.leaveGroup(gid) }
+        @JavascriptInterface fun invite(gid: String, to: String) = runOnUiThread { engine.invite(gid, to) }
+        @JavascriptInterface fun acceptInvite(gid: String) = runOnUiThread { engine.acceptInvite(gid) }
+        @JavascriptInterface fun declineInvite(gid: String) = runOnUiThread { engine.declineInvite(gid) }
+
+        // ---- calls ----
+        @JavascriptInterface fun callStart(dst: String) = runOnUiThread { withMic { engine.callStart(dst) } }
+        @JavascriptInterface fun callAccept() = runOnUiThread { withMic { engine.callAccept() } }
+        @JavascriptInterface fun callReject() = runOnUiThread { engine.callReject() }
+        @JavascriptInterface fun callEnd() = runOnUiThread { engine.callEnd() }
+        @JavascriptInterface fun callMute(on: Boolean) = runOnUiThread { engine.callMute(on) }
+        @JavascriptInterface fun callSpeaker(on: Boolean) = runOnUiThread { engine.callSpeaker(on) }
+
+        // ---- helpers ----
+        @JavascriptInterface
+        fun copyText(text: String) = runOnUiThread {
+            val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            cm.setPrimaryClip(ClipData.newPlainText("NEXUS", text))
+        }
+
+        @JavascriptInterface
+        fun shareText(text: String) = runOnUiThread {
+            val i = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+            startActivity(Intent.createChooser(i, "Share"))
+        }
 
         @JavascriptInterface
         fun saveFile(name: String, b64: String): String = try {

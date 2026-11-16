@@ -1,11 +1,13 @@
 package com.nexus.offline
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
@@ -15,27 +17,72 @@ import androidx.core.app.ServiceCompat
 /** Keeps the process (and therefore the mesh node) alive while the app is in the background. */
 class MeshService : Service() {
 
+    private var baseNotification: Notification? = null
+
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun openIntent(): PendingIntent = PendingIntent.getActivity(
+        this, 0, Intent(this, MainActivity::class.java),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+    )
+
+    private fun fgType(callActive: Boolean): Int {
+        if (Build.VERSION.SDK_INT < 29) return 0
+        var t = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+        if (callActive && Build.VERSION.SDK_INT >= 30 && checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            t = t or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        }
+        return t
+    }
 
     override fun onCreate() {
         super.onCreate()
         val nm = getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(
-            NotificationChannel("nexus", "Mesh node", NotificationManager.IMPORTANCE_LOW)
-        )
-        val open = PendingIntent.getActivity(
-            this, 0, Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val n: Notification = NotificationCompat.Builder(this, "nexus")
+        if (Build.VERSION.SDK_INT >= 26) {
+            nm.createNotificationChannel(NotificationChannel("nexus", "Mesh node", NotificationManager.IMPORTANCE_LOW))
+            nm.createNotificationChannel(NotificationChannel("calls", "Incoming calls", NotificationManager.IMPORTANCE_HIGH))
+        }
+        val n = NotificationCompat.Builder(this, "nexus")
             .setContentTitle("NEXUS Offline")
             .setContentText("Mesh node is active")
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setOngoing(true)
-            .setContentIntent(open)
+            .setContentIntent(openIntent())
             .build()
-        val type = if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE else 0
-        ServiceCompat.startForeground(this, 1, n, type)
+        baseNotification = n
+        ServiceCompat.startForeground(this, 1, n, fgType(false))
+
+        val engine = NexusApp.engine
+        engine.callHook = { active ->
+            try {
+                baseNotification?.let { ServiceCompat.startForeground(this, 1, it, fgType(active)) }
+            } catch (e: Exception) {
+                // microphone service type not allowed right now; call still works while the app is open
+            }
+        }
+        engine.ringHook = { who -> ring(who) }
+    }
+
+    private fun ring(who: String?) {
+        val nm = getSystemService(NotificationManager::class.java)
+        if (who == null) {
+            nm.cancel(2)
+            return
+        }
+        val n = NotificationCompat.Builder(this, "calls")
+            .setContentTitle("Incoming call")
+            .setContentText(who)
+            .setSmallIcon(android.R.drawable.stat_sys_phone_call)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(openIntent())
+            .build()
+        try {
+            nm.notify(2, n)
+        } catch (e: Exception) {
+            // notifications not permitted
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -44,6 +91,8 @@ class MeshService : Service() {
     }
 
     override fun onDestroy() {
+        NexusApp.engine.callHook = null
+        NexusApp.engine.ringHook = null
         NexusApp.engine.stop()
         super.onDestroy()
     }

@@ -13,9 +13,7 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
-import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 object Crypto {
@@ -46,11 +44,20 @@ object Crypto {
         return SecretKeySpec(h, "AES")
     }
 
-    /** Key for broadcast / group traffic, derived from the shared network passphrase. */
+    /** Key for the open channel, derived from the shared passphrase (PBKDF2-HMAC-SHA256, 20000 rounds, 32 bytes). */
     fun groupKey(pass: String): SecretKeySpec {
-        val f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-        val spec = PBEKeySpec(pass.toCharArray(), "nexus-offline-group-v1".toByteArray(), 20000, 256)
-        return SecretKeySpec(f.generateSecret(spec).encoded, "AES")
+        val salt = "nexus-offline-group-v1".toByteArray()
+        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(pass.toByteArray(Charsets.UTF_8), "HmacSHA256"))
+        mac.update(salt)
+        mac.update(byteArrayOf(0, 0, 0, 1))
+        var u = mac.doFinal()
+        val t = u.copyOf()
+        for (i in 1 until 20000) {
+            u = mac.doFinal(u)
+            for (j in t.indices) t[j] = (t[j].toInt() xor u[j].toInt()).toByte()
+        }
+        return SecretKeySpec(t, "AES")
     }
 
     fun encrypt(key: SecretKeySpec, plain: ByteArray): String {
@@ -73,5 +80,28 @@ object Crypto {
     fun fingerprint(pubB64: String): String {
         val d = MessageDigest.getInstance("SHA-256").digest(Base64.decode(pubB64, Base64.NO_WRAP))
         return d.take(6).joinToString("") { "%02X".format(it) }.chunked(4).joinToString(" ")
+    }
+
+    fun randomBytes(n: Int): ByteArray = ByteArray(n).also { rnd.nextBytes(it) }
+
+    fun publicGroupKeyBytes(gid: String): ByteArray =
+        MessageDigest.getInstance("SHA-256").digest(("nexus-public-group:" + gid).toByteArray())
+
+    fun aes(bytes: ByteArray): SecretKeySpec = SecretKeySpec(bytes, "AES")
+
+    /** Raw binary AES-GCM: 12-byte IV + ciphertext + tag. Used for voice frames. */
+    fun encryptRaw(key: SecretKeySpec, plain: ByteArray): ByteArray {
+        val iv = randomBytes(12)
+        val c = Cipher.getInstance("AES/GCM/NoPadding")
+        c.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(128, iv))
+        return iv + c.doFinal(plain)
+    }
+
+    fun decryptRaw(key: SecretKeySpec, data: ByteArray, offset: Int): ByteArray? = try {
+        val c = Cipher.getInstance("AES/GCM/NoPadding")
+        c.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, data, offset, 12))
+        c.doFinal(data, offset + 12, data.size - offset - 12)
+    } catch (e: Exception) {
+        null
     }
 }
