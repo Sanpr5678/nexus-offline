@@ -378,6 +378,7 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
 
     <div class="toggle"><div><strong>Mesh node active</strong><small>Discover and connect to nearby phones. Runs as a foreground service.</small></div><div class="sw" id="swActive" onclick="toggleActive()"></div></div>
     <div class="toggle"><div><strong>Relay mode</strong><small>Allow this phone to forward other devices' messages and calls. Relay permission is yours to give or withdraw.</small></div><div class="sw" id="swRelay" onclick="toggleRelay()"></div></div>
+    <div class="toggle"><div><strong>Connect automatically</strong><small>Join nearby NEXUS phones without asking, so this phone can relay in the background even when the app is closed. Messages stay end-to-end encrypted, so a relay phone cannot read what it forwards. Turn off to approve each new device yourself.</small></div><div class="sw" id="swAuto" onclick="toggleAuto()"></div></div>
     <div class="toggle"><div><strong>Remember approved devices</strong><small>Reconnect to devices you already approved without asking again.</small></div><div class="sw" id="swTrust" onclick="toggleTrust()"></div></div>
 
     <div class="field" style="margin-top:16px"><label>Open channel passphrase</label>
@@ -399,6 +400,7 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
       <div class="btn-row"><button class="btn ghost" onclick="toast('Open Android Settings > Connected devices to change Bluetooth or Wi-Fi')">How to change</button></div></div>
 
     <div class="section-title"><h3>Battery</h3><span>INFO</span></div>
+    <div class="btn-row" style="margin:0 0 10px"><button class="btn" onclick="NexusBridge.batterySettings()">Allow background running</button></div>
     <p class="panel">Staying discoverable keeps radios awake and uses battery. Turn the mesh node off when you do not need it. Some phone makers aggressively stop background apps; if devices drop when the screen is off, allow unrestricted battery use for NEXUS Offline in Android settings.</p>
   </section>
 </main>
@@ -593,6 +595,7 @@ function renderAll(){
   $('swActive').classList.toggle('on',S.active);
   $('swRelay').classList.toggle('on',S.relay);
   $('swTrust').classList.toggle('on',S.autoTrust);
+  $('swAuto').classList.toggle('on',S.autoAccept);
   if(document.activeElement!==$('sName'))$('sName').value=S.me.name;
   if(obStep===1&&!$('obName').value&&document.activeElement!==$('obName'))$('obName').value=S.me.name;
   drawTopo();renderPending();renderDevices();renderBlocked();
@@ -732,6 +735,7 @@ $('filePick').addEventListener('change',function(){
 });
 function toggleRelay(){if(S)bridge().setRelay(!S.relay)}
 function toggleTrust(){if(S)bridge().setAutoTrust(!S.autoTrust)}
+function toggleAuto(){if(S)bridge().setAutoAccept(!S.autoAccept)}
 function toggleActive(){if(S)bridge().setActive(!S.active)}
 function saveName(){var v=$('sName').value.trim();if(!v){toast('Enter a name');return}bridge().setName(v);toast('Name saved')}
 function savePass(){var v=$('sPass').value;if(v.length<4){toast('Use at least 4 characters');return}bridge().setPass(v);$('sPass').value='';toast('Passphrase updated')}

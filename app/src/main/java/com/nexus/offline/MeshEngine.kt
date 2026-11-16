@@ -103,6 +103,12 @@ class MeshEngine(context: Context) {
         private set
     var autoTrust: Boolean = prefs.getBoolean("autotrust", true)
         private set
+    /** Accept connections from any nearby NEXUS device without asking, so the relay chain forms in the background. */
+    var autoAccept: Boolean = prefs.getBoolean("autoaccept", true)
+        private set
+    /** True while the app screen is in the foreground. */
+    var visible = false
+    var msgHook: ((String, Boolean) -> Unit)? = null   // (sender name, is file) when a message arrives while the app is hidden
     private var pass: String = prefs.getString("pass", "nexus-open") ?: "nexus-open"
     private var netKey: SecretKeySpec = Crypto.groupKey(pass)
 
@@ -381,7 +387,7 @@ class MeshEngine(context: Context) {
                 return
             }
             pendingConn[ep] = Pending(p.first, p.second, info.authenticationDigits)
-            if (autoTrust && isTrusted(p.first)) {
+            if (autoAccept || (autoTrust && isTrusted(p.first))) {
                 client.acceptConnection(ep, payCb)
             }
             emitState()
@@ -472,6 +478,12 @@ class MeshEngine(context: Context) {
     fun setAutoTrust(on: Boolean) {
         autoTrust = on
         prefs.edit().putBoolean("autotrust", on).apply()
+        emitState()
+    }
+
+    fun setAutoAccept(on: Boolean) {
+        autoAccept = on
+        prefs.edit().putBoolean("autoaccept", on).apply()
         emitState()
     }
 
@@ -633,6 +645,7 @@ class MeshEngine(context: Context) {
                 if (direct) { delivered.add(p.id); sendAck(p.src, p.id) }
                 emit(JSONObject().put("t", "msg").put("id", p.id).put("from", p.src).put("fromName", nameOf(p.src))
                     .put("dst", evDst(p)).put("text", text).put("ts", p.ts))
+                if (!visible) msgHook?.invoke(nameOf(p.src), false)
             }
             "file" -> handleFile(p)
             "ginv" -> handleInvite(p)
@@ -692,6 +705,7 @@ class MeshEngine(context: Context) {
                 .put("dst", evDst(p)).put("name", rx.name).put("mime", rx.mime)
                 .put("size", out.size()).put("data", Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP))
                 .put("ts", p.ts))
+            if (!visible) msgHook?.invoke(nameOf(p.src), true)
         }
     }
 
@@ -1122,7 +1136,7 @@ class MeshEngine(context: Context) {
         val (dist, _) = bfs()
         val s = JSONObject()
         s.put("me", JSONObject().put("id", nodeId).put("name", name).put("fp", Crypto.fingerprint(myPub)))
-        s.put("relay", relayEnabled).put("autoTrust", autoTrust).put("active", running)
+        s.put("relay", relayEnabled).put("autoTrust", autoTrust).put("autoAccept", autoAccept).put("active", running)
         s.put("bt", radioBt()).put("wifi", radioWifi()).put("scanning", running)
         val la = JSONArray()
         for ((ep, id) in links) {

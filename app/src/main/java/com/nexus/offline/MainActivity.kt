@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Base64
 import android.webkit.JavascriptInterface
@@ -227,6 +228,16 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    override fun onStart() {
+        super.onStart()
+        engine.visible = true
+    }
+
+    override fun onStop() {
+        engine.visible = false
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         // If the user granted permissions in Android Settings, start discovery on return.
@@ -257,7 +268,28 @@ class MainActivity : AppCompatActivity() {
         fun requestPermissions() = runOnUiThread { requestPerms() }
 
         @JavascriptInterface
-        fun setActive(on: Boolean) = runOnUiThread { if (on) startMesh() else stopMesh() }
+        fun setActive(on: Boolean) = runOnUiThread {
+            getSharedPreferences("nexus", Context.MODE_PRIVATE).edit().putBoolean("autostart", on).apply()
+            if (on) startMesh() else stopMesh()
+        }
+
+        @JavascriptInterface fun setAutoAccept(on: Boolean) = runOnUiThread { engine.setAutoAccept(on) }
+
+        @JavascriptInterface
+        fun batterySettings() = runOnUiThread {
+            try {
+                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                    startActivity(
+                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+                    )
+                } else {
+                    pushEvent(JSONObject().put("t", "error").put("m", "Background running is already allowed."))
+                }
+            } catch (e: Exception) {
+                try { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) } catch (x: Exception) { }
+            }
+        }
 
         @JavascriptInterface
         fun sendText(dst: String, text: String): String {

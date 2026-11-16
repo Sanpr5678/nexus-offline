@@ -41,6 +41,7 @@ class MeshService : Service() {
         if (Build.VERSION.SDK_INT >= 26) {
             nm.createNotificationChannel(NotificationChannel("nexus", "Mesh node", NotificationManager.IMPORTANCE_LOW))
             nm.createNotificationChannel(NotificationChannel("calls", "Incoming calls", NotificationManager.IMPORTANCE_HIGH))
+            nm.createNotificationChannel(NotificationChannel("messages", "Messages", NotificationManager.IMPORTANCE_HIGH))
         }
         val n = NotificationCompat.Builder(this, "nexus")
             .setContentTitle("NEXUS Offline")
@@ -61,6 +62,23 @@ class MeshService : Service() {
             }
         }
         engine.ringHook = { who -> ring(who) }
+        engine.msgHook = { who, isFile -> notifyMessage(who, isFile) }
+    }
+
+    private fun notifyMessage(who: String, isFile: Boolean) {
+        val n = NotificationCompat.Builder(this, "messages")
+            .setContentTitle(who)
+            .setContentText(if (isFile) "Sent you a file" else "New message")
+            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(openIntent())
+            .build()
+        try {
+            getSystemService(NotificationManager::class.java).notify(3, n)
+        } catch (e: Exception) {
+            // notifications not permitted
+        }
     }
 
     private fun ring(who: String?) {
@@ -86,6 +104,7 @@ class MeshService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        getSharedPreferences("nexus", MODE_PRIVATE).edit().putBoolean("autostart", true).apply()
         NexusApp.engine.start()
         return START_STICKY
     }
@@ -93,6 +112,7 @@ class MeshService : Service() {
     override fun onDestroy() {
         NexusApp.engine.callHook = null
         NexusApp.engine.ringHook = null
+        NexusApp.engine.msgHook = null
         NexusApp.engine.stop()
         super.onDestroy()
     }
