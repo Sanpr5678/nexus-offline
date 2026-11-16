@@ -50,6 +50,7 @@ class MeshEngine(context: Context) {
         const val NODE_EXPIRY_MS = 100_000L
         const val ID_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"
         val AUDIO_MAGIC: Byte = 0xAD.toByte()
+        val VIDEO_MAGIC: Byte = 0xAE.toByte()
     }
 
     private class Node(val id: String) {
@@ -155,6 +156,11 @@ class MeshEngine(context: Context) {
     private var callStartedAt = 0L
     private var voice: VoiceCall? = null
     private var txSeq = 0
+    private var vSeq = 0
+    private var callVideoWanted = false
+    private var videoOn = false
+    @Volatile private var vFps = 6
+    @Volatile private var vQ = 40
     private var rxLastSeq = -1
     private var rxCount = 0
     private var rxExpected = 0
@@ -590,7 +596,7 @@ class MeshEngine(context: Context) {
     private val payCb = object : PayloadCallback() {
         override fun onPayloadReceived(ep: String, payload: Payload) {
             val bytes = payload.asBytes() ?: return
-            if (bytes.isNotEmpty() && bytes[0] == AUDIO_MAGIC) {
+            if (bytes.isNotEmpty() && (bytes[0] == AUDIO_MAGIC || bytes[0] == VIDEO_MAGIC)) {
                 try {
                     handleAudio(ep, bytes)
                 } catch (e: Exception) {
@@ -911,6 +917,8 @@ class MeshEngine(context: Context) {
             rxCount = 0
             rxExpected = 0
             emit(JSONObject().put("t", "callq").put("loss", loss).put("hops", hops))
+            // video adapts to the link: fewer, smaller frames when audio is being lost
+            if (loss > 25) { vFps = 3; vQ = 25 } else if (loss < 8) { vFps = 6; vQ = 40 } else { vFps = 4; vQ = 30 }
             if (now() - lastRxAt > 8000) {
                 sendCall("end", callPeer, true)
                 endLocal("lost")
@@ -921,16 +929,18 @@ class MeshEngine(context: Context) {
     }
 
     private fun emitCall(st: String, reason: String = "") {
+        // video flag travels with every call event
+
         emit(
             JSONObject().put("t", "call").put("st", st).put("peer", callPeer).put("name", nameOf(callPeer))
-                .put("hops", routeInfo(callPeer).second).put("reason", reason)
+                .put("hops", routeInfo(callPeer).second).put("reason", reason).put("video", callVideoWanted)
                 .put("dur", if (callStartedAt > 0) (now() - callStartedAt) / 1000 else 0)
         )
     }
 
     private fun sendCall(op: String, dst: String, twice: Boolean = false) {
         val key = pairKeyWith(dst) ?: return
-        val body = Crypto.encrypt(key, JSONObject().put("op", op).put("cid", callId).toString().toByteArray(Charsets.UTF_8))
+        val body = Crypto.encrypt(key, JSONObject().put("op", op).put("cid", callId).put("video", callVideoWanted).toString().toByteArray(Charsets.UTF_8))
         transmit(listOf(Packet(newId(), nodeId, dst, "call", TTL, now(), body)), dst)
         if (twice) {
             handler.postDelayed({
@@ -939,7 +949,7 @@ class MeshEngine(context: Context) {
         }
     }
 
-    fun callStart(dstRaw: String) {
+    fun callStart(dstRaw: String, video: Boolean = false) {
         val dst = normalizeId(dstRaw)
         if (!running) { emitError("Turn the mesh node on first."); return }
         if (callState != "idle") { emitError("You are already in a call."); return }
@@ -950,6 +960,7 @@ class MeshEngine(context: Context) {
         }
         callPeer = dst
         callId = newId()
+        callVideoWanted = video
         callState = "out"
         callStartedAt = 0
         sendCall("invite", dst)
@@ -1006,6 +1017,7 @@ class MeshEngine(context: Context) {
                 }
                 callPeer = p.src
                 callId = cid
+                callVideoWanted = j.optBoolean("video", false)
                 callState = "in"
                 callStartedAt = 0
                 emitCall("in")
@@ -1054,6 +1066,37 @@ class MeshEngine(context: Context) {
         handler.postDelayed(callTick, 1000)
     }
 
+    fun setVideo(on: Boolean) {
+        videoOn = on
+    }
+
+    fun videoParams(): Pair<Int, Int> = Pair(vFps, vQ)
+
+    /** One camera frame (small JPEG), encrypted with the call key and sent along the call route. */
+    fun sendVideoFrame(jpeg: ByteArray) {
+        if (callState != "active" || !videoOn) return
+        val ep = callRoute ?: return
+        val key = callKey ?: return
+        val enc = Crypto.encryptRaw(key, jpeg)
+        if (20 + enc.size > 32000) return          // too large for one payload: drop this frame
+        val buf = ByteArray(20 + enc.size)
+        buf[0] = VIDEO_MAGIC
+        buf[1] = TTL.toByte()
+        System.arraycopy(idBytes(nodeId), 0, buf, 2, 8)
+        System.arraycopy(idBytes(callPeer), 0, buf, 10, 8)
+        buf[18] = ((vSeq shr 8) and 0xFF).toByte()
+        buf[19] = (vSeq and 0xFF).toByte()
+        System.arraycopy(enc, 0, buf, 20, enc.size)
+        vSeq = (vSeq + 1) and 0xFFFF
+        client.sendPayload(ep, Payload.fromBytes(buf))
+    }
+
+    /** Video frames are never buffered: a late frame is useless. */
+    private fun emitVideo(jpeg: ByteArray) {
+        val l = listener ?: return
+        l(JSONObject().put("t", "vframe").put("d", Base64.encodeToString(jpeg, Base64.NO_WRAP)))
+    }
+
     private fun idBytes(s: String): ByteArray = s.toByteArray(Charsets.US_ASCII).copyOf(8)
 
     private fun sendAudio(frame: ByteArray) {
@@ -1084,6 +1127,10 @@ class MeshEngine(context: Context) {
             val key = callKey ?: return
             val seq = ((b[18].toInt() and 0xFF) shl 8) or (b[19].toInt() and 0xFF)
             val plain = Crypto.decryptRaw(key, b, 20) ?: return
+            if (b[0] == VIDEO_MAGIC) {
+                emitVideo(plain)
+                return
+            }
             lastRxAt = now()
             if (rxLastSeq >= 0) {
                 val gap = (seq - rxLastSeq) and 0xFFFF
@@ -1117,6 +1164,8 @@ class MeshEngine(context: Context) {
         callKey = null
         callRoute = null
         callStartedAt = 0
+        callVideoWanted = false
+        videoOn = false
         ringHook?.invoke(null)
         if (wasActive) callHook?.invoke(false)
         emitState()

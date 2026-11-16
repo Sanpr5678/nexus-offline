@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
     private var chooserCb: ValueCallback<Array<Uri>>? = null
     private var waitingForSettings = false
     private var pendingMic: (() -> Unit)? = null
+    private var pendingCam: (() -> Unit)? = null
+    private var cam: VideoCam? = null
     private val engine get() = NexusApp.engine
 
     private val chooser = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
@@ -46,6 +48,56 @@ class MainActivity : AppCompatActivity() {
         pendingMic = null
         if (ok) p?.invoke()
         else pushEvent(JSONObject().put("t", "error").put("m", "Microphone permission is needed for voice calls."))
+    }
+
+    private val camLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        val p = pendingCam
+        pendingCam = null
+        if (ok) p?.invoke()
+        else {
+            pushEvent(JSONObject().put("t", "error").put("m", "Camera permission is needed for video calls."))
+            pushEvent(JSONObject().put("t", "cam").put("on", false))
+        }
+    }
+
+    private fun withCam(block: () -> Unit) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            block()
+        } else {
+            pendingCam = block
+            camLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun startCam() {
+        if (cam != null) return
+        val c = VideoCam(
+            this,
+            { engine.videoParams() },
+            { jpeg ->
+                runOnUiThread {
+                    engine.sendVideoFrame(jpeg)
+                    pushEvent(JSONObject().put("t", "vlocal").put("d", Base64.encodeToString(jpeg, Base64.NO_WRAP)))
+                }
+            },
+            { msg ->
+                runOnUiThread {
+                    pushEvent(JSONObject().put("t", "error").put("m", msg))
+                    stopCam()
+                }
+            }
+        )
+        cam = c
+        c.start()
+        engine.setVideo(true)
+        pushEvent(JSONObject().put("t", "cam").put("on", true))
+    }
+
+    private fun stopCam() {
+        cam?.stop()
+        cam = null
+        engine.setVideo(false)
+        if (::web.isInitialized) pushEvent(JSONObject().put("t", "cam").put("on", false))
     }
 
     private fun withMic(block: () -> Unit) {
@@ -256,6 +308,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        cam?.stop()
+        cam = null
+        engine.setVideo(false)
         engine.detach()
         web.destroy()
         super.onDestroy()
@@ -338,7 +393,10 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface fun declineInvite(gid: String) = runOnUiThread { engine.declineInvite(gid) }
 
         // ---- calls ----
-        @JavascriptInterface fun callStart(dst: String) = runOnUiThread { withMic { engine.callStart(dst) } }
+        @JavascriptInterface fun callStart(dst: String, video: Boolean) = runOnUiThread { withMic { engine.callStart(dst, video) } }
+        @JavascriptInterface fun videoStart() = runOnUiThread { withCam { startCam() } }
+        @JavascriptInterface fun videoStop() = runOnUiThread { stopCam() }
+        @JavascriptInterface fun videoFlip() = runOnUiThread { cam?.flip() }
         @JavascriptInterface fun callAccept() = runOnUiThread { withMic { engine.callAccept() } }
         @JavascriptInterface fun callReject() = runOnUiThread { engine.callReject() }
         @JavascriptInterface fun callEnd() = runOnUiThread { engine.callEnd() }

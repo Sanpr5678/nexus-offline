@@ -210,6 +210,24 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
 .chat-head .icon-btn+.icon-btn{margin-left:0}
 .inline-form{display:flex;gap:8px}
 .inline-form input{flex:1;background:#0c1623;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:11px;font-size:12px;outline:none}
+
+/* ---- v3: video calls ---- */
+.chat-head .icon-btn,.chat-head .icon-btn+.icon-btn{margin-left:0}
+.chat-btns{margin-left:auto;display:flex;gap:8px}
+.callscr{overflow:hidden}
+.call-top,.call-center,.call-actions{position:relative;z-index:2}
+.cremote{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:0;background:#000}
+.callscr.hasvideo .cremote{display:block}
+.callscr.hasvideo .call-center{visibility:hidden}
+.callscr.hasvideo .call-top{text-shadow:0 1px 6px #000;color:#e8f4ff}
+.callscr.hasvideo::after{content:"";position:absolute;inset:0;background:linear-gradient(#0008,#0000 22%,#0000 70%,#000a);z-index:1;pointer-events:none}
+.clocalwrap{position:absolute;top:calc(64px + env(safe-area-inset-top));right:14px;width:92px;height:122px;border-radius:14px;overflow:hidden;border:1px solid #47718a;z-index:3;display:none;background:#000}
+.clocalwrap.on{display:block}
+.clocal{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.clocal.back{transform:none}
+.call-actions{gap:12px}
+.cbtn{width:56px;height:56px}
+.cbtn svg{width:24px;height:24px}
 </style>
 </head>
 <body>
@@ -340,8 +358,11 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
     <div class="chat-head">
       <button class="back" onclick="showView('chats')" aria-label="Back">&#8249;</button>
       <div><h2 id="chatTitle"></h2><small id="chatSub"></small></div>
-      <button class="icon-btn" id="chatCall" style="display:none" onclick="startCall(conv)" aria-label="Call"></button>
-      <button class="icon-btn" id="chatInfo" style="display:none" onclick="sheetGroupInfo(conv.slice(2))" aria-label="Group info"></button>
+      <div class="chat-btns">
+        <button class="icon-btn" id="chatVideo" style="display:none" onclick="startCall(conv,true)" aria-label="Video call"></button>
+        <button class="icon-btn" id="chatCall" style="display:none" onclick="startCall(conv)" aria-label="Call"></button>
+        <button class="icon-btn" id="chatInfo" style="display:none" onclick="sheetGroupInfo(conv.slice(2))" aria-label="Group info"></button>
+      </div>
     </div>
     <div class="msgs" id="msgs"></div>
     <div class="composer">
@@ -367,7 +388,7 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
     <div id="callDevs"></div>
     <div class="section-title"><h3>Recent calls</h3><span></span></div>
     <div class="calllog" id="callLog"></div>
-    <p class="note">Calls need a live route to the other phone. Over a direct link audio is reliable. Over relay hops it is experimental: expect delay and drops, and every relay phone must have relay mode on. Voice is 8 kHz telephone quality to keep the data rate low.</p>
+    <p class="note">Video is small and slow on purpose (a few frames per second) so it fits a Bluetooth or Wi-Fi link; it works best on a direct link, and the camera only runs while the app is open. Calls need a live route to the other phone. Over a direct link audio is reliable. Over relay hops it is experimental: expect delay and drops, and every relay phone must have relay mode on. Voice is 8 kHz telephone quality to keep the data rate low.</p>
   </section>
 
   <!-- SETTINGS -->
@@ -422,6 +443,8 @@ h2{font-size:23px;letter-spacing:-.6px;margin:0 0 6px}
 <div class="sheet" id="sheet"></div>
 
 <div class="callscr" id="callScr">
+  <img id="cRemote" class="cremote" alt="">
+  <div class="clocalwrap" id="cLocalWrap"><img id="cLocal" class="clocal" alt=""></div>
   <div class="call-top" id="cTop"></div>
   <div class="call-center">
     <div class="avatar"><i class="ring"></i><i class="ring r2"></i><svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg></div>
@@ -466,6 +489,8 @@ var ICO={
  info:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5M12 8v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
  dev:'<svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 18.5h4" stroke="currentColor"/></svg>',
  grp:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 19c.5-3 2.7-4.6 5.5-4.6s5 1.6 5.5 4.6M15.5 14.8c2.3-.3 4.2.8 5 3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+ cam:'<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6.5" width="12.5" height="11" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="m15.5 10.5 5-3v9l-5-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+ flip:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2M20 4v4h-4M4 20v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
  lock:'<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" stroke="currentColor" stroke-width="1.5"/></svg>'
 };
 
@@ -562,6 +587,9 @@ window.nexusEvent=function(str){
   else if(e.t==='invite'){toast('Group invitation from '+e.fromName)}
   else if(e.t==='call'){onCall(e)}
   else if(e.t==='callq'){onCallQ(e)}
+  else if(e.t==='vframe'){onVFrame(e)}
+  else if(e.t==='vlocal'){onVLocal(e)}
+  else if(e.t==='cam'){onCam(e)}
   else if(e.t==='error'){toast(e.m)}
 };
 function convOf(e){return e.dst==='*'?'*':(e.dst==='me'?e.from:e.dst)}
@@ -651,7 +679,7 @@ function renderDevices(){
     '<div class="device-info"><strong>'+esc(nameFor(n.id))+'</strong><small>'+lbl+(n.relay?' / relay':' / no relay')+'</small><small>ID '+esc(fmtId(n.id))+'</small></div>'+
     '<span class="'+(n.verified?'chip good':'chip')+'">'+(n.verified?'VERIFIED':'UNVERIFIED')+'</span>'+
     '<div class="row-actions" style="width:100%"><button class="btn" onclick="openChat(\''+n.id+'\')">Message</button>'+
-    '<button class="btn" onclick="startCall(\''+n.id+'\')">Call</button>'+
+    '<button class="btn" onclick="startCall(\''+n.id+'\')">Call</button><button class="btn" onclick="startCall(\''+n.id+'\',true)">Video</button>'+
     '<button class="btn ghost" onclick="NexusBridge.verify(\''+n.id+'\','+(!n.verified)+')">'+(n.verified?'Unverify':'Mark verified')+'</button>'+
     '<button class="btn danger" onclick="if(confirm(\'Block this device?\'))NexusBridge.block(\''+n.id+'\')">Block</button></div></div>'}).join('');
 }
@@ -700,6 +728,7 @@ function renderChatHeader(){
   $('chatSub').textContent=sub;
   var direct=conv&&conv!=='*'&&!isGroup(conv);
   $('chatCall').style.display=direct?'grid':'none';$('chatCall').innerHTML=ICO.phone;
+  $('chatVideo').style.display=direct?'grid':'none';$('chatVideo').innerHTML=ICO.cam;
   $('chatInfo').style.display=isGroup(conv)?'grid':'none';$('chatInfo').innerHTML=ICO.info;
 }
 function stLabel(m){if(!m.out)return '';return {sending:'Sending',queued:'Queued',sent:'Sent',delivered:'Delivered',failed:'Failed'}[m.st||'sending']}
@@ -751,7 +780,7 @@ function clearTrusted(){if(confirm('Forget all approved devices? You will be ask
 function clearChats(){if(confirm('Delete all chat history on this phone?')){chats={};save();unread={};updateBadge();if(view==='chats')renderConvos();toast('Chat history cleared')}}
 
 /* ---------- calls ---------- */
-function startCall(id){if(callUI){toast('You are already in a call');return}bridge().callStart(id)}
+function startCall(id,video){if(callUI){toast('You are already in a call');return}bridge().callStart(id,!!video)}
 function callByInput(){var id=normId($('callById').value);if(!validId(id)){toast('That ID code is not valid');return}startCall(id)}
 function renderCalls(){
   if(!S)return;
@@ -763,7 +792,7 @@ function renderCalls(){
   $('callCount').textContent=on;
   $('callDevs').innerHTML=keys.length?keys.map(function(id){
     var n=nodeById(id),ok=reachable(id);
-    return '<div class="device" style="margin-bottom:9px"><div class="device-icon">'+ICO.dev+'</div><div class="device-info"><strong>'+esc(nameFor(id))+'</strong><small>'+(ok?(n.hops===1?'Direct link':n.hops+' hops (experimental)'):'Not reachable')+'</small></div><button class="btn" '+(ok?'':'disabled')+' onclick="startCall(\''+id+'\')">Call</button></div>'}).join(''):'<div class="empty">No devices yet. Connect to a nearby phone first, or call by ID code above.</div>';
+    return '<div class="device" style="margin-bottom:9px"><div class="device-icon">'+ICO.dev+'</div><div class="device-info"><strong>'+esc(nameFor(id))+'</strong><small>'+(ok?(n.hops===1?'Direct link':n.hops+' hops (experimental)'):'Not reachable')+'</small></div><button class="btn" '+(ok?'':'disabled')+' onclick="startCall(\''+id+'\')">Call</button><button class="btn" style="margin-left:6px" '+(ok?'':'disabled')+' onclick="startCall(\''+id+'\',true)">Video</button></div>'}).join(''):'<div class="empty">No devices yet. Connect to a nearby phone first, or call by ID code above.</div>';
   var lg=calllog.slice().reverse().slice(0,15);
   $('callLog').innerHTML=lg.length?lg.map(function(r){
     return '<div class="logrow"><div><b>'+esc(r.name||fmtId(r.peer))+'</b><small>'+(r.dir==='in'?'Incoming':'Outgoing')+' / '+reasonText(r.res)+(r.dur?' / '+fmtDur(r.dur):'')+'</small></div><small>'+hhmm(r.ts)+'</small></div>'}).join(''):'<div class="empty">No calls yet.</div>';
@@ -774,16 +803,18 @@ function fmtDur(s){s=Math.max(0,Math.floor(s));return ('0'+Math.floor(s/60)).sli
 function onCall(e){
   if(e.st==='out'||e.st==='in'){
     clearTimeout(hideTimer);
-    callUI={st:e.st,peer:e.peer,name:contacts[e.peer]||e.name||fmtId(e.peer),dir:e.st==='in'?'in':'out',hops:e.hops,t0:0,muted:false,spk:false,loss:0};
-    showCall();
+    callUI={st:e.st,peer:e.peer,name:contacts[e.peer]||e.name||fmtId(e.peer),dir:e.st==='in'?'in':'out',hops:e.hops,t0:0,muted:false,spk:false,loss:0,video:!!e.video,cam:false,front:true,hasv:false,vlast:0};
+    resetVideoUI();showCall();
   } else if(e.st==='active'&&callUI){
     callUI.st='active';callUI.t0=Date.now();callUI.hops=e.hops;callUI.muted=false;callUI.spk=false;
     bridge().callMute(false);bridge().callSpeaker(false);
+    if(e.video)bridge().videoStart();
     clearInterval(callTimer);callTimer=setInterval(tickCall,1000);
     showCall();
   } else if(e.st==='ended'){
     if(!callUI)return;
     clearInterval(callTimer);
+    bridge().videoStop();resetVideoUI();
     calllog.push({peer:callUI.peer,name:callUI.name,dir:callUI.dir,ts:Date.now(),dur:e.dur||0,res:e.reason||'ended'});
     if(calllog.length>60)calllog.shift();store('nx_calllog',calllog);
     callUI.st='ended';callUI.reason=e.reason;showCall();
@@ -791,7 +822,24 @@ function onCall(e){
   }
 }
 function onCallQ(e){if(!callUI||callUI.st!=='active')return;callUI.loss=e.loss;callUI.hops=e.hops;paintQuality()}
-function tickCall(){if(callUI&&callUI.st==='active')$('cSub').textContent=fmtDur((Date.now()-callUI.t0)/1000)}
+function tickCall(){
+  if(!callUI||callUI.st!=='active')return;
+  var d=fmtDur((Date.now()-callUI.t0)/1000);
+  $('cSub').textContent=d;
+  if(callUI.hasv&&Date.now()-callUI.vlast>3500){callUI.hasv=false;$('callScr').classList.remove('hasvideo')}
+  if(callUI.hasv)$('cTop').textContent=callUI.name+' / '+d;
+}
+function resetVideoUI(){$('cRemote').removeAttribute('src');$('cLocal').removeAttribute('src');$('cLocalWrap').classList.remove('on');$('callScr').classList.remove('hasvideo')}
+function onVFrame(e){
+  if(!callUI||callUI.st!=='active')return;
+  $('cRemote').src='data:image/jpeg;base64,'+e.d;
+  callUI.vlast=Date.now();
+  if(!callUI.hasv){callUI.hasv=true;$('callScr').classList.add('hasvideo');tickCall()}
+}
+function onVLocal(e){if(!callUI)return;$('cLocal').src='data:image/jpeg;base64,'+e.d;$('cLocalWrap').classList.add('on')}
+function onCam(e){if(!callUI)return;callUI.cam=!!e.on;if(!e.on)$('cLocalWrap').classList.remove('on');showCall()}
+function toggleCam(){if(!callUI)return;if(callUI.cam)bridge().videoStop();else bridge().videoStart()}
+function flipCam(){if(!callUI)return;callUI.front=!callUI.front;$('cLocal').classList.toggle('back',!callUI.front);bridge().videoFlip()}
 function paintQuality(){
   if(!callUI)return;
   var q=callUI.loss<8?3:(callUI.loss<25?2:1);
@@ -806,17 +854,17 @@ function showCall(){
   var c=callUI,ringing=(c.st==='out'||c.st==='in');
   el.className='callscr on'+(ringing?' ringing':'');
   $('cName').textContent=c.name;
-  $('cTop').textContent=c.st==='in'?'Incoming call':(c.st==='out'?'Outgoing call':(c.st==='active'?'Voice call':'Call'));
+  $('cTop').textContent=c.st==='in'?(c.video?'Incoming video call':'Incoming call'):(c.st==='out'?(c.video?'Outgoing video call':'Outgoing call'):(c.st==='active'?(c.video||c.cam||c.hasv?'Video call':'Voice call'):'Call'));
   $('cBars').style.display=c.st==='active'?'flex':'none';
   $('cQtext').textContent='';
   if(c.st==='out')$('cSub').textContent='Calling...';
-  else if(c.st==='in')$('cSub').textContent='NEXUS voice call'+(c.hops>1?' / '+c.hops+' hops':'');
+  else if(c.st==='in')$('cSub').textContent='NEXUS '+(c.video?'video':'voice')+' call'+(c.hops>1?' / '+c.hops+' hops':'');
   else if(c.st==='active'){tickCall();paintQuality()}
   else $('cSub').textContent=reasonText(c.reason);
   var a='';
   if(c.st==='out')a=cbtn('end',ICO.end,'End','NexusBridge.callEnd()');
   else if(c.st==='in')a=cbtn('rej',ICO.end,'Decline','NexusBridge.callReject()')+cbtn('acc',ICO.phone,'Accept','NexusBridge.callAccept()');
-  else if(c.st==='active')a=cbtn('',ICO.mic,c.muted?'Muted':'Mute','toggleMute()',c.muted)+cbtn('',ICO.spk,'Speaker','toggleSpk()',c.spk)+cbtn('end',ICO.end,'End','NexusBridge.callEnd()');
+  else if(c.st==='active')a=cbtn('',ICO.mic,c.muted?'Muted':'Mute','toggleMute()',c.muted)+cbtn('',ICO.spk,'Speaker','toggleSpk()',c.spk)+cbtn('',ICO.cam,'Camera','toggleCam()',c.cam)+(c.cam?cbtn('',ICO.flip,'Flip','flipCam()'):'')+cbtn('end',ICO.end,'End','NexusBridge.callEnd()');
   $('cActions').innerHTML=a;
 }
 function toggleMute(){if(!callUI)return;callUI.muted=!callUI.muted;bridge().callMute(callUI.muted);showCall()}

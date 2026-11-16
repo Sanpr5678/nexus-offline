@@ -35,4 +35,9 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     // Transport: Google Nearby Connections (BLE + Bluetooth Classic + Wi-Fi Direct/Hotspot/LAN, auto-selected)
     implementation("com.google.android.gms:play-services-nearby:19.1.0")
+    // Camera for video calls
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("com.google.guava:guava:31.1-android")
 }
